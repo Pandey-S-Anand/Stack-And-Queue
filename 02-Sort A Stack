@@ -1,0 +1,83 @@
+//Iterative Approach
+
+//Naive Implementation
+
+class GfG {
+    public Stack<Integer> sort(Stack<Integer> stack) {
+        Stack<Integer> auxStack = new Stack<>();
+        auxStack.push(stack.pop());
+
+        while (!stack.isEmpty()) {
+            int topElement = stack.pop();
+
+            if (topElement > auxStack.peek()) {
+                auxStack.push(topElement);
+            } else {
+                while (!auxStack.isEmpty() && topElement < auxStack.peek()) {
+                    stack.push(auxStack.pop());
+                }
+                auxStack.push(topElement);
+            }
+        }
+
+        return auxStack;
+    }
+}
+
+
+//Optimal Implementation
+
+class GfG {
+    public Stack<Integer> sort(Stack<Integer> stack) {
+        Stack<Integer> auxStack = new Stack<>();
+
+        while (!stack.isEmpty()) {
+            int topElement = stack.pop();
+
+            while (!auxStack.isEmpty() && topElement < auxStack.peek()) {
+                stack.push(auxStack.pop());
+            }
+
+            auxStack.push(topElement);
+        }
+
+        return auxStack;
+    }
+}
+
+
+
+//Recursive Approach
+
+
+class GfG {
+    public Stack<Integer> sort(Stack<Integer> stack) {
+        sortStack(stack);
+        return stack;
+    }
+
+    private void sortStack(Stack<Integer> stack) {
+        if (stack.isEmpty()) {
+            return;
+        }
+
+        int topElement = stack.pop();
+
+        sortStack(stack);
+
+        insertInSortedOrder(stack, topElement);
+    }
+
+    private void insertInSortedOrder(Stack<Integer> stack, int element) {
+        if (stack.isEmpty() || element > stack.peek()) {
+            stack.push(element);
+            return;
+        }
+
+        int top = stack.pop();
+
+        insertInSortedOrder(stack, element);
+
+        stack.push(top);
+    }
+}
