@@ -1,0 +1,68 @@
+//Iterative Approach
+
+public class Solution {
+	public static void deleteMiddle(Stack<Integer> stack, int N) {
+        int middleIndex = (stack.size() - 1) / 2;
+        Stack<Integer> auxStack = new Stack<>();
+
+        for (int i = 0; i < middleIndex; i++) {
+            auxStack.push(stack.pop());
+        }
+
+        stack.pop();
+
+        while (!auxStack.isEmpty()) {
+            stack.push(auxStack.pop());
+        }
+    }
+}
+
+
+//Recursive Approach
+
+//Naive Implementation
+
+public class Solution {
+    public static void deleteMiddle(Stack<Integer> stack, int N) {
+        int middleIndex = 0, size = stack.size();
+
+        if (size % 2 == 0) {
+            middleIndex = (size - 1) / 2;
+        } else {
+            middleIndex = (size) / 2;
+        }
+
+        deleteMiddleElement(stack, 0, middleIndex);
+    }
+
+    private static void deleteMiddleElement(Stack<Integer> stack, int currentIndex, int targetIndex) {
+        if (currentIndex == targetIndex) {
+            stack.pop();
+            return;
+        }
+
+        int topElement = stack.pop();
+        deleteMiddleElement(stack, currentIndex + 1, targetIndex);
+        stack.push(topElement);
+    }
+}
+
+
+//Optimal Implementation
+
+public class Solution {
+    public static void deleteMiddle(Stack<Integer> stack, int N) {
+        deleteMiddleElement(stack, (stack.size() - 1) / 2);
+    }
+
+    private static void deleteMiddleElement(Stack<Integer> stack, int currentIndex) {
+        if (currentIndex == 0) {
+            stack.pop();
+            return;
+        }
+
+        int topElement = stack.pop();
+        deleteMiddleElement(stack, currentIndex - 1);
+        stack.push(topElement);
+    }
+}
