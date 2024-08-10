@@ -1,0 +1,65 @@
+//Iterative Approach
+
+public class Solution {
+    public static Stack<Integer> pushAtBottom(Stack<Integer> stack, int x) {
+        Stack<Integer> auxStack = new Stack<>();
+
+        while (!stack.isEmpty()) {
+            auxStack.push(stack.pop());
+        }
+
+        stack.push(x);
+
+        while (!auxStack.isEmpty()) {
+            stack.push(auxStack.pop());
+        }
+
+        return stack;
+    }
+}
+
+
+//Recursive Approach
+
+//Using Extra Space
+
+public class Solution {
+    public static Stack<Integer> pushAtBottom(Stack<Integer> stack, int x) {
+        insertAtBottomWithAuxiliaryStack(stack, new Stack<>(), x);
+        return stack;
+    }
+
+    private static void insertAtBottomWithAuxiliaryStack(Stack<Integer> stack, Stack<Integer> auxiliaryStack, int x) {
+        if (stack.isEmpty()) {
+            stack.push(x);
+            while (!auxiliaryStack.isEmpty()) {
+                stack.push(auxiliaryStack.pop());
+            }
+            return;
+        }
+        auxiliaryStack.push(stack.pop());
+
+        insertAtBottomWithAuxiliaryStack(stack, auxiliaryStack, x);
+    }
+}
+
+
+//Using Constant Space
+
+public class Solution {
+    public static Stack<Integer> pushAtBottom(Stack<Integer> stack, int x) {
+        insertAtBottom(stack, x);
+        return stack;
+    }
+
+    private static void insertAtBottom(Stack<Integer> stack, int x) {
+        if (stack.isEmpty()) {
+            stack.push(x);
+            return;
+        }
+
+        int temp = stack.pop();
+        insertAtBottom(stack, x);
+        stack.push(temp);
+    }
+}
