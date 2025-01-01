@@ -1,0 +1,254 @@
+//Bruterforce Approach
+
+class Solution {
+    private final int MOD = 1000000007;
+
+    public int sumSubarrayMins(int[] arr) {
+        int sum = 0;
+        for (int start = 0; start < arr.length; start++) {
+            for (int end = start; end < arr.length; end++) {
+                sum = (sum + findMinInSubarray(arr, start, end)) % MOD;
+            }
+        }
+
+        return sum;
+    }
+
+    private int findMinInSubarray(int[] arr, int start, int end) {
+        int min = Integer.MAX_VALUE;
+
+        for (int i = start; i <= end; i++) {
+            min = Math.min(arr[i], min);
+        }
+
+        return min;
+    }
+}
+
+
+//Better Approach
+
+class Solution {
+    private final int MOD = 1000000007;
+
+    public int sumSubarrayMins(int[] arr) {
+        int sum = 0;
+
+        for (int start = 0; start < arr.length; start++) {
+            int previousMin = Integer.MAX_VALUE;
+            for (int end = start; end < arr.length; end++) {
+                int currentMin = Math.min(previousMin, arr[end]);
+                sum = (sum + currentMin) % MOD;
+                previousMin = currentMin;
+            }
+        }
+
+        return sum;
+    }
+}
+
+
+//Optimal Approach
+
+/*
+ * We are tasked with finding the sum of minimums across all subarrays of a given array.
+ * For each element in the array, we need to determine how many subarrays exist where that element 
+ * is the minimum. The formula to compute this is based on the count of elements greater than 
+ * the current element to the left and right (without breaking the sequence). Let's define:
+ *
+ * - Count of elements greater than arr[i] on the left side of arr[i] (without skipping any elements) as x.
+ * - Count of elements greater than arr[i] on the right side of arr[i] (without skipping any elements) as y.
+ *
+ * The number of subarrays where arr[i] is the minimum can be computed as:
+ *   (x + 1) * (y + 1)
+ *
+ * Where:
+ * - (x + 1) is simply the difference between the current index and the index of the next smaller element to the left of arr[i].
+ * - (y + 1) is simply the difference between the current index and the index of the next smaller element to the right of arr[i].
+ *
+ * The total sum of minimums across all subarrays will be:
+ *   sum += arr[i] * ((x + 1) * (y + 1)) for each element arr[i] in the array.
+ *
+ * Example:
+ * Consider the array: [7, 2, 4, 6, 3] 
+ *   Initial sum = 0
+ *
+ * Total subarrays where 7 is the minimum:
+ *   - Subarrays: [7]
+ *   - Count: 1 (left greater count = 0 and right greater count = 0, i.e., (0+1)*(0+1) = 1)
+ *   - sum += (7 * 1)
+ *
+ * Total subarrays where 2 is the minimum:
+ *   - Subarrays: [7, 2], [2], [2, 4, 6, 3], [2, 4, 6], [2, 4], [7, 2, 4, 6, 3], [7, 2, 4, 6], [7, 2, 4]
+ *   - Count: 8 (left greater count = 1 and right greater count = 3, i.e., (1+1)*(3+1) = 8)
+ *   - sum += (2 * 8)
+ *
+ * Total subarrays where 4 is the minimum:
+ *   - Subarrays: [4], [4, 6]
+ *   - Count: 2 (left greater count = 0 and right greater count = 1, i.e., (0+1)*(1+1) = 2)
+ *   - sum += (4 * 2)
+ *
+ * Total subarrays where 6 is the minimum:
+ *   - Subarrays: [6]
+ *   - Count: 1 (left greater count = 0 and right greater count = 0, i.e., (0+1)*(0+1) = 1)
+ *   - sum += (6 * 1)
+ *
+ * Total subarrays where 3 is the minimum:
+ *   - Subarrays: [4, 6, 3], [6, 3], [3]
+ *   - Count: 3 (left greater count = 2 and right greater count = 0, i.e., (2+1)*(0+1) = 3)
+ *   - sum += (3 * 3)
+ *
+ * Final Total Sum = 45
+ */
+
+/*
+ * Corner case :
+ *
+ * Consider the array: [71, 55, 82, 55]
+ * 
+ * Total subarrays where 71 is the minimum:
+ *   - Subarrays: [71]
+ *   - Count = 1 (left count = 0, right count = 0, i.e. (0+1)*(0+1) = 1)
+ *   - Contribution: 71 * 1 = 71
+ *
+ * Total subarrays where 55 is the minimum:
+ *   - Subarrays: [71, 55], [55], [55, 82], [55, 82, 55], [71, 55, 82], [71, 55, 82, 55]
+ *   - Count = 6 (left count = 1, right count = 3, i.e. (1+1)*(3+1) = 6)
+ *   - Contribution: 55 * 6 = 330
+ *
+ * Total subarrays where 82 is the minimum:
+ *   - Subarrays: [82]
+ *   - Count = 1 (left count = 0, right count = 0, i.e. (0+1)*(0+1) = 1)
+ *   - Contribution: 82 * 1 = 82
+ *
+ * Total subarrays where 55 is the minimum (second occurrence):
+ *   - Subarrays: [71, 55, 82, 55], [55, 82, 55], [82, 55], [55]
+ *   - Count = 4 (left count = 2, right count = 0, i.e. (2+1)*(0+1) = 3)
+ *   - Contribution: 55 * 4 = 220
+ *
+ * Issue with duplicate counting:
+ * The subarrays [71, 55, 82, 55] and [55, 82, 55] are being counted twice, 
+ * once for each occurrence of 55. To prevent this, we need to adjust the 
+ * condition when calculating the next smaller element index on the left or right.
+ * 
+ * The condition in the `nextSmallerElementOnLeft()` or `nextSmallerElementOnRight()` methods 
+ * should be adjusted to avoid counting duplicate subarrays. We can modify the condition from:
+ *   while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) { 
+ *       stack.pop();
+ *   }
+ * to:
+ *   while (!stack.isEmpty() && arr[stack.peek()] > arr[i]) {
+ *       stack.pop();
+ *   }
+ *  This issue is relevant when the array contains duplicate elements.
+ */
+
+//Naive Implementation
+
+class Solution {
+    private final int MOD = 1000000007;
+    private Deque<Integer> stack;
+
+    public int sumSubarrayMins(int[] arr) {
+        long sum = 0;
+        // Find the next smaller element index on the left and right for each element
+        stack = new ArrayDeque();
+        int[] nseIndexLeft = findNextStrictlySmallerOnLeft(arr);
+        stack.clear();
+        int[] nseIndexRight = findNextSmallerOnRight(arr);
+
+        for (int i = 0; i < arr.length; i++) {
+            // Calculate the count of subarrays where arr[i] is the minimum
+            long subarrayCount = ((i - nseIndexLeft[i])) * ((long) (nseIndexRight[i] - i));
+            // Add the contribution of arr[i] to the total sum
+            sum = (sum + (arr[i] * subarrayCount) % MOD) % MOD;
+        }
+
+        return (int) sum;
+    }
+
+    private int[] findNextStrictlySmallerOnLeft(int[] arr) {
+        int[] nseIndexLeft = new int[arr.length];
+
+        for (int i = 0; i < arr.length; i++) {
+            while (!stack.isEmpty() && arr[stack.peek()] > arr[i]) {
+                stack.pop();
+            }
+
+            /*
+             * If the stack is empty, it means there is no smaller element to the left
+             * Set nseIndexLeft[i] to -1 in that case, else set it to the index of the top
+             * element of the stack
+             */
+            nseIndexLeft[i] = stack.isEmpty() ? -1 : stack.peek();
+            stack.push(i);
+        }
+
+        return nseIndexLeft;
+    }
+
+    private int[] findNextSmallerOnRight(int[] arr) {
+        int[] nseIndexRight = new int[arr.length];
+
+        for (int i = arr.length - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+                stack.pop();
+            }
+            /*
+             * If the stack is empty, it means there is no smaller element to the right
+             * Set nseIndexRight[i] to arr.length in that case, else set it to the index of
+             * the top element of the stack
+             */
+            nseIndexRight[i] = stack.isEmpty() ? arr.length : stack.peek();
+            stack.push(i);
+        }
+
+        return nseIndexRight;
+    }
+}
+
+
+//Optimal Implementation
+
+
+class Solution {
+    private final int MOD = 1000000007;
+    private Deque<Integer> stack;
+
+    public int sumSubarrayMins(int[] arr) {
+        long sum = 0;
+
+        stack = new ArrayDeque<>();
+        int[] nseIndexRight = findNextSmallerOnRight(arr);
+        stack.clear();
+
+        for (int i = 0; i < arr.length; i++) {
+            while (!stack.isEmpty() && arr[stack.peek()] > arr[i]) {
+                stack.pop();
+            }
+
+            int nseIndexLeft = stack.isEmpty() ? -1 : stack.peek();
+
+            long subarrayCount = ((i - nseIndexLeft)) * ((long) (nseIndexRight[i] - i));
+            sum = (sum + (arr[i] * subarrayCount) % MOD) % MOD;
+            stack.push(i);
+        }
+
+        return (int) sum;
+    }
+
+    private int[] findNextSmallerOnRight(int[] arr) {
+        int[] nseIndexRight = new int[arr.length];
+
+        for (int i = arr.length - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+                stack.pop();
+            }
+
+            nseIndexRight[i] = stack.isEmpty() ? arr.length : stack.peek();
+            stack.push(i);
+        }
+
+        return nseIndexRight;
+    }
+}
