@@ -1,0 +1,199 @@
+/*
+Operator precedence determines the order in which different operators are evaluated in an expression. 
+Operators with higher precedence are executed before those with lower precedence.
+
+Associativity defines how operators of the same precedence are grouped in the absence of parentheses. 
+
+| **Operator** | **Description**        | **Precedence** | **Associativity** |
+|---------------|------------------------|----------------|--------------------|
+| `^`           | Exponentiation         | High           | Right-to-left     |
+| `*`, `/`      | Multiplication, Division | Medium       | Left-to-right     |
+| `+`, `-`      | Addition, Subtraction  | Low            | Left-to-right     |
+
+Note : Parentheses are not operators, but are used for **grouping**. They indicate which part of an expression should be evaluated first, overriding all other operator precedence rules.
+*/
+
+/*
+ * Rules for Infix to Postfix Conversion:
+ * 1. Operands (such as variables or constants) are directly added to the output as they appear in the expression.
+ * 2. When encountering '(', push it onto the stack.
+ * 3. When encountering ')', pop operators from the stack and append them to the output until '(' is found. Discard the '('.
+ * 4. If the incoming operator has higher precedence than the operator at the top of the stack, push it onto the stack.
+ *    (If the stack is empty or the top of the stack is '(', simply push the incoming operator onto the stack.)
+ * 5. If the incoming operator has lower precedence than the operator at the top of the stack, 
+ *    pop and append the operator at the top of the stack to the output, then compare the incoming operator with the operator at the new top of the stack.
+ *    (If the stack is empty or the top of the stack is '(', push the incoming operator onto the stack without comparison.)
+ * 6. If the incoming operator has the same precedence as the operator at the top of the stack, 
+ *    decide based on their associativity:
+ *    - For left-to-right associativity (L-to-R): The operator on the top of the stack (left) has precedence over the incoming operator,
+ *      so it is popped and added to the output, then the incoming operator is pushed onto the stack.
+ *    - For right-to-left associativity (R-to-L): The incoming operator (right) takes precedence over the operator on the stack, 
+ *      so it is directly pushed onto the stack without popping the operator from the stack.
+ *    (If the stack is empty or the top of the stack is '(', push the incoming operator onto the stack without comparison.)
+ * 7. After processing the entire expression, pop and append all remaining operators from the stack to the output.
+ */
+
+
+/*
+ * Note: The question explicitly states to ignore the right-to-left (R to L) associativity
+ * of the exponentiation operator ^. Therefore, for this problem, the exponentiation operator
+ * ^ is considered to have left-to-right (L to R) associativity, just like other operators 
+ * such as +, -, *, and /.
+ */
+
+//Intuitive Implementation
+
+class Solution {
+    public static String infixToPostfix(String infixExpression) {
+        StringBuilder postfix = new StringBuilder();
+        Deque<Character> operatorStack = new ArrayDeque<>(); // Note: The stack maintains a monotonically increasing order of operator precedence from bottom to top.
+
+        for (int i = 0; i < infixExpression.length(); i++) {
+            char ch = infixExpression.charAt(i);
+
+            // If the character is an operand (a letter or a number), add it to the result
+            if (isOperand(ch)) {
+                postfix.append(ch);
+            } else if (ch == '(') { // If the character is '(', push it to the stack (open parentheses)
+                operatorStack.push(ch);
+            } else if (ch == ')') { // If the character is ')', pop from the stack until '(' is found
+                while (!operatorStack.isEmpty() && operatorStack.peek() != '(') {
+                    postfix.append(operatorStack.pop());
+                }
+                operatorStack.pop(); // Pop the '(' from the stack
+            } else {
+                if (operatorStack.isEmpty() || operatorStack.peek() == '(') { // If the stack is empty or contains '(' on top, push the operator onto the stack
+                    operatorStack.push(ch);
+                } else if (precedence(ch) > precedence(operatorStack.peek())) { // If the incoming operator has higher precedence, push it onto the stack
+                    operatorStack.push(ch);
+                } else { // precedence(ch) <= precedence(operatorStack.peek())
+                    // Pop operators of higher precedence from the stack
+                    while (!operatorStack.isEmpty() && operatorStack.peek() != '(' && precedence(ch) < precedence(operatorStack.peek())) {
+                        postfix.append(operatorStack.pop());
+                    }
+
+                    // If the stack is empty or contains '(', push the incoming operator onto the  stack
+                    if (operatorStack.isEmpty() || operatorStack.peek() == '(') {
+                        operatorStack.push(ch);
+                    } else {
+                        // If the incoming operator has equal precedence with the top of the stack
+                        if (precedence(ch) == precedence(operatorStack.peek())) {
+                            // If the operator is left-to-right associative, pop the operator from the stack and push the incoming operator
+                            if (isLeftToRightAssociative(ch)) {
+                                postfix.append(operatorStack.pop());
+                                operatorStack.push(ch);
+                            } else {
+                                // If the operator is right-to-left associative, push the incoming operator onto the stack
+                                operatorStack.push(ch);
+                            }
+                        } else { // precedence(ch) > precedence(operatorStack.peek())
+                            operatorStack.push(ch); // If the incoming operator has higher precedence, push it onto the stack
+                        }
+                    }
+                }
+            }
+        }
+
+        // After processing all characters, pop the remaining operators from the stack and append to the result
+        while (!operatorStack.isEmpty()) {
+            postfix.append(operatorStack.pop());
+        }
+
+        return postfix.toString();
+    }
+
+    // Method to check if the character is an operand (i.e., a letter or a digit)
+    private static boolean isOperand(char ch) {
+        return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9');
+    }
+
+    // Method to define the precedence of operators
+    private static int precedence(char operator) {
+        switch (operator) {
+            case '^':
+                return 3; // Exponentiation operator has the highest precedence
+            case '*':
+            case '/':
+                return 2; // Multiplication and division have medium precedence
+            case '+':
+            case '-':
+                return 1; // Addition and subtraction have the lowest precedence
+            default:
+                return -1; // Invalid operator (error handling)
+        }
+    }
+
+    /*
+     * Normally, operators of the same precedence (like + and -, * and /) share the same associativity.
+     */
+    private static boolean isLeftToRightAssociative(char operator) {
+        /*
+         * All operators used in the expression (i.e., +, -, *, /, and ^) are treated as left-to-right associative.
+         * As per the problem, even ^ should be treated as left-to-right associative, although normally ^ is right-to-left associative.
+         */
+        return operator == '+' || operator == '-' || operator == '*' || operator == '/' || operator == '^';
+    }
+}
+
+
+//Concise Implementation
+
+class Solution {
+    public String infixToPostfix(String infixExpression) {
+        StringBuilder postfix = new StringBuilder();
+        Deque<Character> operatorStack = new ArrayDeque<>();
+
+        for (int i = 0; i < infixExpression.length(); i++) {
+            char ch = infixExpression.charAt(i);
+
+            if (Character.isLetterOrDigit(ch)) {
+                postfix.append(ch);
+            } else if (ch == '(') {
+                operatorStack.push(ch);
+            } else if (ch == ')') {
+                while (!operatorStack.isEmpty() && operatorStack.peek() != '(') {
+                    postfix.append(operatorStack.pop());
+                }
+                operatorStack.pop();
+            } else {
+                while (!operatorStack.isEmpty() && operatorStack.peek() != '(' && precedence(ch) < precedence(operatorStack.peek())) {
+                    postfix.append(operatorStack.pop());
+                }
+
+                if (operatorStack.isEmpty() || operatorStack.peek() == '(') {
+                    operatorStack.push(ch);
+                } else {
+                    if (precedence(ch) == precedence(operatorStack.peek()) && isLeftToRightAssociative(ch)) {
+                        postfix.append(operatorStack.pop());
+                    }
+                    operatorStack.push(ch);
+                }
+            }
+        }
+
+        while (!operatorStack.isEmpty()) {
+            postfix.append(operatorStack.pop());
+        }
+
+        return postfix.toString();
+    }
+
+    private int precedence(char operator) {
+        switch (operator) {
+            case '^':
+                return 3;
+            case '*':
+            case '/':
+                return 2;
+            case '+':
+            case '-':
+                return 1;
+            default:
+                return -1;
+        }
+    }
+
+    private static boolean isLeftToRightAssociative(char operator) {
+        return operator == '+' || operator == '-' || operator == '*' || operator == '/' || operator == '^';
+    }
+}
