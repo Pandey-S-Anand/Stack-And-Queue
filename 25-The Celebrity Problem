@@ -1,0 +1,177 @@
+//Bruteforce Approach
+
+class Solution {
+    public int findCelebrity(int[][] matrix) {
+        // Iterate through each person to check if they are a celebrity
+        for (int person = 0; person < matrix.length; person++) {
+            if (isRowAllZeros(matrix, person) && isColumnAllOnes(matrix, person)) {
+                return person; // Found the celebrity
+            }
+        }
+
+        return -1; // No celebrity found
+    }
+
+    // Check if the given person's row has all zeros (they don't know anyone)
+    private boolean isRowAllZeros(int[][] matrix, int person) {
+        for (int otherPerson = 0; otherPerson < matrix[0].length; otherPerson++) {
+            if (matrix[person][otherPerson] == 1) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Check if the given person's column has all ones (everyone knows them)
+    private boolean isColumnAllOnes(int[][] matrix, int person) {
+        for (int otherPerson = 0; otherPerson < matrix.length; otherPerson++) {
+            if (otherPerson != person && matrix[otherPerson][person] == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+
+//Optimal Approach
+
+/*
+ * CRUX OF THE PROBLEM:
+ * 
+ * The celebrity must satisfy two key conditions:
+ * 
+ * 1. The celebrity knows no one else (i.e., the row for the celebrity should have all 0s except for their own index).
+ * 2. Everyone else must know the celebrity (i.e., the column for the celebrity should have all 1s except for their own index).
+ * 
+ * The logic can be understood through the following comparisons between two persons:
+ * 
+ * 1. **Person 1 vs Person 2**
+ *    - If person 1 knows person 2 and person 2 does not know person 1, then person 1 cannot be the celebrity, but person 2 can be a potential celebrity.
+ *    - If person 1 does not know person 2 and person 2 knows person 1, then person 2 cannot be the celebrity, but person 1 can be a potential celebrity.
+ *    - If both person 1 and person 2 know each other, neither can be the celebrity because the celebrity does not know anyone.
+ *    - If neither person 1 nor person 2 knows the other, both are disqualified because the celebrity must be known by everyone else.
+ * 
+ * There can be only one celebrity or no celebrity at all because:
+ * - If a person is a celebrity out of `n` people, then excluding the celebrity, all `n-1` people must know the celebrity.
+ * 
+ */
+
+
+class Solution {
+    public int celebrity(int[][] matrix) {
+        // Stack to maintain potential celebrity candidates
+        Deque<Integer> stack = new ArrayDeque<>();
+
+        for (int otherPerson = 0; otherPerson < matrix.length; otherPerson++) {
+            if (!stack.isEmpty()) {
+                int person = stack.peek(); // The current candidate on top of the stack
+                int personKnowsOtherPerson = matrix[person][otherPerson]; // Does person know otherPerson?
+                int otherPersonKnowsPerson = matrix[otherPerson][person]; // Does otherPerson know person?
+
+                if (personKnowsOtherPerson == otherPersonKnowsPerson) { // personKnowsOtherPerson = otherPersonKnowsPerson == 0 or personKnowsOtherPerson = otherPersonKnowsPerson == 1
+                    // If both know each other or neither knows the other , neither can be a celebrity
+                    stack.pop();
+                } else if (personKnowsOtherPerson == 1) { // personKnowsOtherPerson == 1 and otherPersonKnowsPerson==0
+                    // person knows otherPerson, so person can't be a celebrity and other person can be a celeberity
+                    stack.pop();
+                    stack.push(otherPerson);
+                } else { // personKnowsOtherPerson == 0 and otherPersonKnowsPerson==1
+                    // otherPerson knows person, so otherPerson can't be a celebrity Continue as person is still a candidate
+                }
+            } else {
+                // If the stack is empty, push the current person
+                stack.push(otherPerson);
+            }
+        }
+
+        // If no potential celebrity exists, return -1
+        if (stack.isEmpty()) {
+            /*
+             * 4
+             * 0 1 1 0
+             * 0 0 0 1
+             * 1 1 0 1
+             * 1 1 1 0
+             * 
+             * Its Correct output is:
+             * -1
+             */
+
+            return -1;
+        }
+
+        int potentialCelebrity = stack.peek();
+
+        // Validate the potential celebrity
+        
+        /*
+         * 0 1 0
+         * 1 0 0
+         * 0 1 0
+         * 
+         * Its Correct output is:
+         * -1
+         */
+        // 1. The potential celebrity should not know anyone (row check)
+        for (int otherPerson = 0; otherPerson < matrix[0].length; otherPerson++) {
+            if (potentialCelebrity != otherPerson && matrix[potentialCelebrity][otherPerson] == 1) {
+                return -1; // If the candidate knows someone, they can't be a celebrity
+            }
+        }
+
+        /*
+         * For Input:
+         * 3
+         * 0 0 0
+         * 0 0 0
+         * 0 0 0
+         * 
+         * It's Correct output is:
+         * -1
+         */
+        // 2. Everyone else should know the potential celebrity (column check)
+        for (int otherPerson = 0; otherPerson < matrix.length; otherPerson++) {
+            if (potentialCelebrity != otherPerson && matrix[otherPerson][potentialCelebrity] == 0) {
+                return -1; // If someone doesn't know the candidate, they can't be a celebrity
+            }
+        }
+
+        // The potential celebrity passed both checks, return their index
+        return potentialCelebrity;
+    }
+}
+
+
+// Aliter (Concise Implementation)
+
+class Solution {
+    public int celebrity(int[][] matrix) {
+        Deque<Integer> stack = new ArrayDeque<>();
+
+        for (int otherPerson = 0; otherPerson < matrix.length; otherPerson++) {
+            if (!stack.isEmpty()) {
+              if (matrix[stack.peek()][otherPerson] == 1) {
+                    stack.pop();
+                    stack.push(otherPerson);
+                }
+            } else {
+                stack.push(otherPerson);
+            }
+        }
+
+        if (stack.isEmpty()) {
+            return -1;
+        }
+
+        int potentialCelebrity = stack.peek();
+
+        for (int person = 0; person < matrix.length; person++) {
+            if ((person != potentialCelebrity && (matrix[potentialCelebrity][person] == 1 || matrix[person][potentialCelebrity] == 0))) {
+                return -1;
+            }
+        }
+
+        return potentialCelebrity;
+    }
+}
