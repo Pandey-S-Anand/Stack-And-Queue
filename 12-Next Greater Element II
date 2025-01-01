@@ -1,0 +1,80 @@
+//Bruteforce Approach
+
+//Naive Implementation
+
+class Solution {
+    public int[] nextGreaterElements(int[] arr) {
+        int[] nextGreaterElements = new int[arr.length];
+
+        for (int i = 0; i < arr.length; i++) {
+            nextGreaterElements[i] = nextGreaterElement(arr, i);
+        }
+
+        return nextGreaterElements;
+    }
+
+    private int nextGreaterElement(int[] arr, int index) {
+        for (int i = index + 1; i < arr.length; i++) {
+            if (arr[i] > arr[index]) {
+                return arr[i];
+            }
+        }
+
+        for (int i = 0; i < index; i++) {
+            if (arr[i] > arr[index]) {
+                return arr[i];
+            }
+        }
+
+        return -1;
+    }
+}
+
+
+//Optimal Implementation
+
+class Solution {
+    public int[] nextGreaterElements(int[] arr) {
+        int[] nextGreaterElements = new int[arr.length];
+
+        for (int i = 0; i < arr.length; i++) {
+            nextGreaterElements[i] = nextGreaterElement(arr, i);
+        }
+
+        return nextGreaterElements;
+    }
+
+    private int nextGreaterElement(int[] arr, int index) {
+        for (int i = 0; i < arr.length; i++) {
+            int nextIndex = (index + 1 + i) % arr.length;
+            if (arr[nextIndex] > arr[index]) {
+                return arr[nextIndex];
+            }
+        }
+        return -1;
+    }
+}
+
+
+//Optimal Approach (Monotonically decreasing stack)
+
+class Solution {
+    public int[] nextGreaterElements(int[] arr) {
+        Deque<Integer> stack = new ArrayDeque<>();
+        int[] nextGreaterElements = new int[arr.length];
+
+        for (int i = (2 * arr.length) - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && stack.peek() <= arr[i % arr.length]) {
+                stack.pop();
+            }
+
+            if (i < arr.length) {
+                nextGreaterElements[i] = stack.isEmpty() ? -1 : stack.peek();
+            }
+
+            stack.push(arr[i % arr.length]);
+        }
+
+        return nextGreaterElements;
+    }
+}
