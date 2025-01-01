@@ -1,0 +1,46 @@
+//Bruteforce Approach
+
+class Solution {
+    public static int[] help_classmate(int arr[], int n) {
+        int[] nextSmallerElement = new int[n];
+
+        for (int i = n - 1; i >= 0; i--) {
+            nextSmallerElement[i] = nextSmallerElement(arr, n, i);
+        }
+
+        return nextSmallerElement;
+    }
+
+    private static int nextSmallerElement(int[] arr, int n, int index) {
+        for (int i = index + 1; i < n; i++) {
+            if (arr[i] < arr[index]) {
+                return arr[i];
+            }
+        }
+
+        return -1;
+    }
+}
+
+
+
+//Optimal Approach (Monotonically decreasing stack)
+
+class Solution {
+    public static int[] help_classmate(int arr[], int n) {
+        Deque<Integer> stack = new ArrayDeque<>();
+        int[] nextSmallerElement = new int[n];
+
+        for (int i = n - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && stack.peek() >= arr[i]) {
+                stack.pop();
+            }
+
+            nextSmallerElement[i] = stack.isEmpty() ? -1 : stack.peek();
+
+            stack.push(arr[i]);
+        }
+
+        return nextSmallerElement;
+    }
+}
