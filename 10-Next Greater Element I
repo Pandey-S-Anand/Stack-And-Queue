@@ -1,0 +1,54 @@
+//Bruteforce Approach
+
+class Solution {
+    public int[] nextGreaterElement(int[] subset, int[] arr) {
+        Map<Integer, Integer> nextGreaterMap = new HashMap<>();
+
+        for (int i = 0; i < arr.length; i++) {
+            nextGreaterMap.put(arr[i], nextGreaterValue(i, arr));
+        }
+
+        int[] nextGreaterValue = new int[subset.length];
+        for (int i = 0; i < subset.length; i++) {
+            nextGreaterValue[i] = nextGreaterMap.get(subset[i]);
+        }
+
+        return nextGreaterValue;
+    }
+
+    private int nextGreaterValue(int index, int[] arr) {
+        for (int i = index + 1; i < arr.length; i++) {
+            if (arr[i] > arr[index]) {
+                return arr[i];
+            }
+        }
+
+        return -1;
+    }
+}
+
+
+//Optimal Approach (Monotonically decreasing stack)
+
+class Solution {
+    public int[] nextGreaterElement(int[] subset, int[] arr) {
+        Deque<Integer> stack = new ArrayDeque<>();
+        Map<Integer, Integer> nextGreaterMap = new HashMap<>();
+        int[] nextGreaterValue = new int[subset.length];
+
+        for (int i = arr.length - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && stack.peek() <= arr[i]) {
+                stack.pop();
+            }
+
+            nextGreaterMap.put(arr[i], stack.isEmpty() ? -1 : stack.peek());
+            stack.push(arr[i]);
+        }
+
+        for (int i = 0; i < subset.length; i++) {
+            nextGreaterValue[i] = nextGreaterMap.get(subset[i]);
+        }
+
+        return nextGreaterValue;
+    }
+}
