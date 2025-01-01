@@ -1,0 +1,67 @@
+//Bruteforce Approach
+
+class StockSpanner {
+    // List to store the prices for each day
+    private List<Integer> prices;
+
+    public StockSpanner() {
+        // Initialize the list
+        prices = new ArrayList<>();
+    }
+    
+    public int next(int price) {
+        // Add the current price to the list
+        prices.add(price);
+        
+        // Calculate the span for the current price
+        int span = 1;  // The span starts with 1 (the current day)
+        
+        // Traverse backward through the list to count the number of consecutive days the price is less than or equal to the current price
+        for (int i = prices.size() - 2; i >= 0; i--) {
+            if (prices.get(i) <= price) {
+                span++;
+            } else {
+                break;  // Stop if we encounter a price greater than the current price
+            }
+        }
+        
+        // Return the calculated span
+        return span;
+    }
+}
+
+
+//Optimal Approach (Monotonic increasing stack)
+
+class StockSpanner {
+    /*
+     * Stack to store pairs of [price, span], where:
+     * price is the stock price
+     * span is the span (number of consecutive days) the stock price has been
+     * greater than or equal to the current price
+     */
+    private Deque<int[]> stack;
+
+    public StockSpanner() {
+        // Initialize the stack
+        stack = new ArrayDeque<>();
+    }
+
+    public int next(int price) {
+        int span = 1;  // Initialize span as 1 (the current day itself)
+        /*
+         * Pop elements from the stack while the price at the top of the stack is less than or equal to the current price
+         * The span will include the current day plus the span of the days where prices are less than or equal to the current price
+         */
+        while (!stack.isEmpty() && stack.peek()[0] <= price) {
+            span += stack.peek()[1]; // Add the span of the previous days to the current span
+            stack.pop(); // Remove the previous element from the stack
+        }
+        
+        // Push the current price and its calculated span onto the stack
+        stack.push(new int[] { price, span });
+        
+        // Return the span of the current stock price
+        return span;
+    }
+}
