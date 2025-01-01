@@ -1,0 +1,54 @@
+//Bruteforce Approach
+
+class Solution {
+    public static ArrayList<Integer> prevSmall(ArrayList<Integer> arr, int n) {
+        ArrayList<Integer> supporterRating = new ArrayList<>();
+        supporterRating.add(-1);
+
+        for (int i = 1; i < n; i++) {
+            boolean supporter = false;
+            for (int j = i - 1; j >= 0; j--) {
+                if (arr.get(j) < arr.get(i)) {
+                    supporterRating.add(arr.get(j));
+                    supporter = true;
+                    break;
+                }
+            }
+
+            if (!supporter) {
+                supporterRating.add(-1);
+            }
+        }
+
+        return supporterRating;
+    }
+}
+
+
+//Optimal Approach (Using Stack)
+
+class Solution {
+    public static ArrayList<Integer> prevSmall(ArrayList<Integer> arr, int n) {
+        ArrayDeque<Integer> stack = new ArrayDeque<>();
+        ArrayList<Integer> supporterRating = new ArrayList<>();
+
+        stack.push(arr.get(0));
+        supporterRating.add(-1);
+
+        for (int i = 1; i < n; i++) {
+            while (!stack.isEmpty() && stack.peek() >= arr.get(i)) {
+                stack.pop();
+            }
+
+            if (stack.isEmpty()) {
+                supporterRating.add(-1);
+            } else {
+                supporterRating.add(stack.peek());
+            }
+
+            stack.push(arr.get(i));
+        }
+
+        return supporterRating;
+    }
+}
