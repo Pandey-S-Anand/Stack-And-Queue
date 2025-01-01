@@ -1,0 +1,266 @@
+//Bruteforce Approach
+
+class Solution {
+    public ArrayList<Integer> maxOfMin(int[] arr) {
+        ArrayList<Integer> result = new ArrayList<>();
+
+        for (int windowSize = 1; windowSize <= arr.length; windowSize++) {
+            result.add(maxOfMinInWindow(windowSize, arr));
+        }
+
+        return result;
+    }
+
+    private int maxOfMinInWindow(int k, int[] arr) {
+        int maxOfMin = Integer.MIN_VALUE;
+
+        // Iterate over all possible windows of size k
+        for (int i = 0; i <= arr.length - k; i++) {
+            int currentMin = Integer.MAX_VALUE;
+
+            // Find the minimum in the current window
+            for (int j = i; j < i + k; j++) {
+                currentMin = Math.min(currentMin, arr[j]);
+            }
+
+            // Update the maximum of the minimums
+            maxOfMin = Math.max(maxOfMin, currentMin);
+        }
+
+        return maxOfMin;
+    }
+}
+
+
+//Better Approach (Using monotonic increasing deque)
+
+class Solution {
+    public ArrayList<Integer> maxOfMin(int[] arr) {
+        ArrayList<Integer> result = new ArrayList<>();
+
+        for (int windowSize = 1; windowSize <= arr.length; windowSize++) {
+            result.add(maxOfMinInWindow(windowSize, arr));
+        }
+
+        return result;
+    }
+
+    private int maxOfMinInWindow(int k, int[] arr) {
+        Deque<Integer> deque = new ArrayDeque<>();
+        int maxOfMin = Integer.MIN_VALUE;
+
+        // Process the first window separately
+        for (int i = 0; i < k; i++) {
+            // Maintain a monotonic increasing deque where the smallest element is always at the front
+            while (!deque.isEmpty() && arr[deque.peekLast()] >= arr[i]) {
+                deque.pollLast();
+            }
+            deque.offerLast(i);
+        }
+
+        // The front of the deque is the minimum of the 1st window
+        maxOfMin = Math.max(maxOfMin, arr[deque.peekFirst()]);
+
+        // Process the remaining windows
+        for (int windowEndIndex = k; windowEndIndex < arr.length; windowEndIndex++) {
+            // Maintain the deque for the current window
+            while (!deque.isEmpty() && arr[deque.peekLast()] >= arr[windowEndIndex]) {
+                deque.pollLast();
+            }
+            deque.offerLast(windowEndIndex);
+
+            // Remove element from the deque if the maximum no longer belongs to the current window, i.e., it belongs to the previous window.
+            if (!deque.isEmpty() && deque.peekFirst() <= windowEndIndex - k) {
+                deque.pollFirst();
+            }
+
+            // The front of the deque is the minimum of the current window
+            maxOfMin = Math.max(maxOfMin, arr[deque.peekFirst()]);
+        }
+
+        return maxOfMin;
+    }
+}
+
+
+//Optimal Approach
+
+//Naive Implementation
+
+class Solution {
+    private Deque<Integer> stack;
+
+    public ArrayList<Integer> maxOfMin(int[] arr) {
+        stack = new ArrayDeque<>();
+        ArrayList<Integer> maxOfMinForWindowSizes = new ArrayList<>(Collections.nCopies(arr.length, 0));
+
+        // Find previous and next smaller element indices
+        int[] pseIndex = findNextSmallerOnLeft(arr);
+        stack.clear();
+        int[] nseIndex = findNextSmallerOnRight(arr);
+
+        for (int i = 0; i < arr.length; i++) {
+            /*
+             * The window span represents the range of window sizes where the current
+             * element is a candidate for the minimum element. Specifically, it means this element
+             * can be the minimum for windows of size 1 to `windowSpan`.
+             */
+            int windowSpan = nseIndex[i] - pseIndex[i] - 1;
+            maxOfMinForWindowSizes.set(windowSpan - 1, Math.max(maxOfMinForWindowSizes.get(windowSpan - 1), arr[i]));
+        }
+
+        /*
+         * Instead of updating all candidate windows for each element, we only update the
+         * answer array for the largest possible window size (`windowSpan`) in which
+         * the current element can be the minimum. This avoids unnecessary O(n²) time complexity
+         * by restricting updates to only the largest valid window size for each element.
+         *
+         * After processing all elements, we perform a second pass from the
+         * second-largest window size down to propagate the maximum values. This ensures that the
+         * answer for any smaller window size also takes into account the maximum value of the
+         * corresponding larger window size:
+         * - For a window of size `i`, the answer will be the maximum between the current
+         *   value for window size `i` and the value for window size `i+1`.
+         * - This works because an element valid for a larger window (`i+1`) is also
+         *   valid for any smaller window (`i`).
+         *
+         * This optimization allows us to build the result in O(n) time after the
+         * initial pass, efficiently utilizing the fact that larger window candidates also apply to  smaller ones.
+         */
+
+        /*
+         * The reason we start updating from `n-2` (processing window sizes from the second-largest downwards)
+         * is that for a window size of `n` (the entire array), there is only one possible window—the array itself.
+         * 
+         * For this single window, the smallest element is guaranteed to be the overall
+         * minimum of the entire array, and this value directly contributes to the result for the window size `n`,
+         * so it is already correctly computed.
+         * 
+         * Additionally, for a window of size `n`, there will always be exactly one candidate element
+         * (possibly repeated) that will be the minimum for a window of size `n`.
+         */
+
+        for (int i = arr.length - 2; i >= 0; i--) {
+            maxOfMinForWindowSizes.set(i, Math.max(maxOfMinForWindowSizes.get(i), maxOfMinForWindowSizes.get(i + 1)));
+        }
+
+        return maxOfMinForWindowSizes;
+    }
+
+    private int[] findNextSmallerOnLeft(int[] arr) {
+        int[] pseIndex = new int[arr.length];
+
+        for (int i = 0; i < arr.length; i++) {
+            while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+                stack.pop();
+            }
+
+            pseIndex[i] = stack.isEmpty() ? -1 : stack.peek();
+            stack.push(i);
+        }
+
+        return pseIndex;
+    }
+
+    private int[] findNextSmallerOnRight(int[] arr) {
+        int[] nseIndex = new int[arr.length];
+
+        for (int i = arr.length - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+                stack.pop();
+            }
+
+            nseIndex[i] = stack.isEmpty() ? arr.length : stack.peek();
+            stack.push(i);
+        }
+
+        return nseIndex;
+    }
+}
+
+
+//Better Implementation
+
+class Solution {
+    private Deque<Integer> stack;
+
+    public ArrayList<Integer> maxOfMin(int[] arr) {
+        stack = new ArrayDeque<>();
+        ArrayList<Integer> maxOfMinForWindowSizes = new ArrayList<>(Collections.nCopies(arr.length, 0));
+
+        int[] nseIndex = findNextSmallerOnRight(arr);
+        stack.clear();
+
+        for (int i = 0; i < arr.length; i++) {
+            while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+                stack.pop();
+            }
+
+            int pseIndex = stack.isEmpty() ? -1 : stack.peek();
+
+            int windowSpan = nseIndex[i] - pseIndex - 1;
+            maxOfMinForWindowSizes.set(windowSpan - 1, Math.max(maxOfMinForWindowSizes.get(windowSpan - 1), arr[i]));
+            stack.push(i);
+        }
+
+        for (int i = arr.length - 2; i >= 0; i--) {
+            maxOfMinForWindowSizes.set(i, Math.max(maxOfMinForWindowSizes.get(i), maxOfMinForWindowSizes.get(i + 1)));
+        }
+
+        return maxOfMinForWindowSizes;
+    }
+
+    private int[] findNextSmallerOnRight(int[] arr) {
+        int[] nseIndex = new int[arr.length];
+
+        for (int i = arr.length - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+                stack.pop();
+            }
+
+            nseIndex[i] = stack.isEmpty() ? arr.length : stack.peek();
+            stack.push(i);
+        }
+
+        return nseIndex;
+    }
+}
+
+
+//Optimal Implementation
+
+class Solution {
+    public ArrayList<Integer> maxOfMin(int[] arr) {
+        Deque<Integer> stack = new ArrayDeque<>();
+        ArrayList<Integer> maxOfMinForWindowSizes = new ArrayList<>(Collections.nCopies(arr.length, 0));
+
+        for (int i = 0; i < arr.length; i++) {
+            while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
+                int index = stack.pop();
+                int previousSmallerElementIndex = stack.isEmpty() ? -1 : stack.peek();
+                int nextSmallerElementIndex = i;
+
+                int windowSpan = nextSmallerElementIndex - previousSmallerElementIndex - 1;
+
+                maxOfMinForWindowSizes.set(windowSpan - 1, Math.max(maxOfMinForWindowSizes.get(windowSpan - 1), arr[index]));
+            }
+            stack.push(i);
+        }
+
+        while (!stack.isEmpty()) {
+            int index = stack.pop();
+            int previousSmallerElementIndex = stack.isEmpty() ? -1 : stack.peek();
+            int nextSmallerElementIndex = arr.length;
+
+            int windowSpan = nextSmallerElementIndex - previousSmallerElementIndex - 1;
+
+            maxOfMinForWindowSizes.set(windowSpan - 1, Math.max(maxOfMinForWindowSizes.get(windowSpan - 1), arr[index]));
+        }
+
+        for (int i = arr.length - 2; i >= 0; i--) {
+            maxOfMinForWindowSizes.set(i, Math.max(maxOfMinForWindowSizes.get(i), maxOfMinForWindowSizes.get(i + 1)));
+        }
+
+        return maxOfMinForWindowSizes;
+    }
+}
