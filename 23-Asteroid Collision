@@ -1,0 +1,158 @@
+/*
+1. Asteroids Moving in the Same Direction
+   - If two asteroids are moving in the same direction:
+     * Both positive (+): They are moving to the right and will never meet.
+     * Both negative (-): They are moving to the left and will never meet.
+
+2. Asteroids Moving in Opposite Directions
+   - Case: Left-moving asteroid (-) appears first
+     * If a left-moving asteroid is followed by a right-moving asteroid:
+       No collision will occur because the left-moving asteroid is moving 
+       away from the right-moving one.
+
+   - Case: Right-moving asteroid (+) appears first
+     * If a right-moving asteroid is followed by a left-moving asteroid:
+       A collision is possible because the right-moving asteroid is moving 
+       toward the left-moving one.
+
+Conclusion:
+   - The only possible collision occurs when:
+     1. A right-moving asteroid (+) appears first in the array.
+     2. It is followed by a left-moving asteroid (-).
+*/
+
+/*
+ * Important Testcases:
+ * 
+ * Testcase 1:
+ * asteroids = [-2, 2, 1, -2]
+ * Output: [-2, -2]
+ * Explanation: The 2 and -2 collide, resulting in -2. The remaining -2 is unaffected.
+ * 
+ * Testcase 2:
+ * asteroids = [10, 2, -5]
+ * Output: [10, -5]
+ * Explanation: The 2 and -5 collide, resulting in -5. Then 10 and -5 collide, resulting in 10.
+ */
+
+//Naive Implementation
+
+class Solution {
+    public int[] asteroidCollision(int[] asteroids) {
+        Deque<Integer> stack = new ArrayDeque<>();
+
+        for (int i = 0; i < asteroids.length; i++) {
+            // Check for a possible collision: a right-moving asteroid (+ve) meets a left-moving asteroid (-ve)
+            if (!stack.isEmpty() && stack.peek() > 0 && asteroids[i] < 0) {
+                // Case 1: Asteroids have equal size, both explode
+                if (stack.peek() == Math.abs(asteroids[i])) {
+                    stack.pop(); // Remove the top right-moving asteroid from the stack
+                } else if (stack.peek() > Math.abs(asteroids[i])) { // Case 2: Top (right-moving) asteroid is larger, current (left-moving) asteroid explodes
+                    continue; // Do nothing, as the current (left-moving) asteroid is destroyed
+                } else { // Case 3: Current (left-moving) asteroid is larger, remove smaller (right-moving) asteroids from the stack
+                    while ((!stack.isEmpty() && stack.peek() > 0) && (stack.peek() < Math.abs(asteroids[i]))) {
+                        stack.pop(); // Remove smaller right-moving asteroids from the stack
+                    }
+
+                    // If the stack is empty after popping, the current (left-moving) asteroid survives and is added to the stack
+                    if (stack.isEmpty()) {
+                        stack.push(asteroids[i]);
+                    } else if (stack.peek() < 0) { // If the top of the stack is a left-moving asteroid, add the current (left-moving) asteroid to the stack
+                        stack.push(asteroids[i]);
+                    } else { // If the top is a right-moving asteroid
+                        // Case 3.1: Both asteroids are of the same size, both explode
+                        if (stack.peek() == Math.abs(asteroids[i])) {
+                            stack.pop();
+                        } else {
+                            continue; // Case 3.2: The top asteroid is larger, the current asteroid is destroyed
+                        }
+                    }
+                }
+            } else {
+                // If no collision is possible, push the current asteroid into the stack
+                stack.push(asteroids[i]);
+            }
+        }
+
+        // Prepare the result array with the remaining asteroids in the stack
+        int[] finalAsteroidState = new int[stack.size()];
+        int index = stack.size() - 1;
+
+        while (!stack.isEmpty()) {
+            finalAsteroidState[index--] = stack.pop();
+        }
+
+        // Return the final state of the asteroids
+        return finalAsteroidState;
+    }
+}
+
+
+//Better Implementation
+
+class Solution {
+    public int[] asteroidCollision(int[] asteroids) {
+        Deque<Integer> stack = new ArrayDeque<>();
+
+        for (int i = 0; i < asteroids.length; i++) {
+            if (!stack.isEmpty() && stack.peek() > 0 && asteroids[i] < 0) {
+                while ((!stack.isEmpty() && stack.peek() > 0) && (stack.peek() < Math.abs(asteroids[i]))) {
+                    stack.pop();
+                }
+
+                if (stack.isEmpty() || stack.peek() < 0) {
+                    stack.push(asteroids[i]);
+                } else if (stack.peek() == Math.abs(asteroids[i])) {
+                    stack.pop();
+                }
+
+            } else {
+                stack.push(asteroids[i]);
+            }
+        }
+
+        int[] finalAsteroidState = new int[stack.size()];
+        int index = stack.size() - 1;
+
+        while (!stack.isEmpty()) {
+            finalAsteroidState[index--] = stack.pop();
+        }
+
+        return finalAsteroidState;
+    }
+}
+
+//Optimal Implementation
+
+class Solution {
+    public int[] asteroidCollision(int[] asteroids) {
+        int top = -1;
+        int[] stack = new int[asteroids.length];
+
+        for (int i = 0; i < asteroids.length; i++) {
+            if (top != -1 && stack[top] > 0 && asteroids[i] < 0) {
+                while ((top != -1 && stack[top] > 0) && (stack[top] < Math.abs(asteroids[i]))) {
+                    top--;
+                }
+
+                if (top == -1 || stack[top] < 0) {
+                    stack[++top] = asteroids[i];
+                } else if (stack[top] == Math.abs(asteroids[i])) {
+                    top--;
+                }
+
+            } else {
+                stack[++top] = asteroids[i];
+            }
+        }
+
+        int[] finalAsteroidState = new int[top + 1];
+        int index = top;
+
+        while (top != -1) {
+            finalAsteroidState[index--] = stack[top--];
+        }
+
+        return finalAsteroidState;
+    }
+}
