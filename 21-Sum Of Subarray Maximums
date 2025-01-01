@@ -1,0 +1,139 @@
+//Bruteforce Approach
+
+class Solution {
+    public int sumOfMax(List<Integer> arr) {
+        int sum = 0;
+        for (int start = 0; start < arr.size(); start++) {
+            for (int end = start; end < arr.size(); end++) {
+                sum += findMaxInSubarray(arr, start, end);
+            }
+        }
+
+        return sum;
+    }
+
+    private int findMaxInSubarray(List<Integer> arr, int start, int end) {
+        int max = Integer.MIN_VALUE;
+
+        for (int i = start; i <= end; i++) {
+            max = Math.max(arr.get(i), max);
+        }
+
+        return max;
+    }
+}
+
+
+//Better Approach
+
+class Solution {
+    public int sumOfMax(List<Integer> arr) {
+        int sum = 0;
+        for (int start = 0; start < arr.size(); start++) {
+            int prevMax = Integer.MIN_VALUE;
+            for (int end = start; end < arr.size(); end++) {
+                int currentMax = Math.max(prevMax, arr.get(end));
+                sum += currentMax;
+                prevMax = currentMax;
+            }
+        }
+
+        return sum;
+    }
+}
+
+//Optimal Approach
+
+//Naive Implementation
+
+class Solution {
+    private Deque<Integer> stack;
+    
+    public int sumOfMax(List<Integer> arr) {
+       stack=new ArrayDeque<>();
+       int[] ngeIndexLeft = findNextGreaterOnLeft(arr);
+       stack.clear();
+       int[] ngeIndexRight = findNextGreaterOnRight(arr);
+       
+       int sum=0;
+       for(int i=0;i<arr.size();i++){
+          int subarrayCount = (i - ngeIndexLeft[i]) * (ngeIndexRight[i] - i); 
+          sum=sum+(arr.get(i)*subarrayCount);
+       }
+       
+       return sum;
+    }
+    
+    private int[] findNextGreaterOnLeft(List<Integer> arr) {
+        int[] ngeIndexLeft = new int[arr.size()];
+
+        for (int i = 0; i < arr.size(); i++) {
+            while (!stack.isEmpty() && arr.get(stack.peek()) < arr.get(i)) {
+                stack.pop();
+            }
+
+            ngeIndexLeft[i] = stack.isEmpty() ? -1 : stack.peek();
+            stack.push(i);
+        }
+        
+        return ngeIndexLeft;
+    }
+    
+    private int[] findNextGreaterOnRight(List<Integer> arr) {
+        int[] ngeIndexRight = new int[arr.size()];
+
+        for (int i = arr.size() - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && arr.get(stack.peek()) <= arr.get(i)) {
+                stack.pop();
+            }
+
+            ngeIndexRight[i] = stack.isEmpty() ? arr.size() : stack.peek();
+            stack.push(i);
+        }
+        
+        return ngeIndexRight;
+    }
+}
+
+
+//Optimal Implementation
+
+class Solution {
+    private Deque<Integer> stack;
+
+    public int sumOfMax(List<Integer> arr) {
+        stack = new ArrayDeque<>();
+        int[] ngeIndexRight = findNextGreaterOnRight(arr);
+        stack.clear();
+
+        int sum = 0;
+        for (int i = 0; i < arr.size(); i++) {
+            while (!stack.isEmpty() && arr.get(stack.peek()) < arr.get(i)) {
+                stack.pop();
+            }
+
+            int ngeIndexLeft = stack.isEmpty() ? -1 : stack.peek();
+
+            int subarrayCount = (i - ngeIndexLeft) * (ngeIndexRight[i] - i);
+            sum = sum + (arr.get(i) * subarrayCount);
+            stack.push(i);
+        }
+
+        return sum;
+    }
+
+    private int[] findNextGreaterOnRight(List<Integer> arr) {
+        int[] ngeIndexRight = new int[arr.size()];
+
+        for (int i = arr.size() - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && arr.get(stack.peek()) <= arr.get(i)) {
+                stack.pop();
+            }
+
+            ngeIndexRight[i] = stack.isEmpty() ? arr.size() : stack.peek();
+            stack.push(i);
+        }
+
+        return ngeIndexRight;
+    }
+}
