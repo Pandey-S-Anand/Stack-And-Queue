@@ -1,0 +1,256 @@
+//Bruteforce Approach
+
+class Solution {
+    public int maximalRectangle(char[][] matrix) {
+        int maxArea = 0;
+        int[] heights = new int[matrix[0].length];
+
+        for (int row = 0; row < matrix.length; row++) {
+            // Update the histogram heights for the current row
+            for (int col = 0; col < matrix[0].length; col++) {
+                // Increment height if the current cell is '1'
+                if (matrix[row][col] == '1') {
+                    heights[col] += 1;
+                } else {
+                    // Reset height to 0 if the current cell is '0'
+                    heights[col] = 0;
+                }
+            }
+
+            // Compute the largest rectangle area in the current histogram (row)
+            maxArea = Math.max(maxArea, largestRectangleArea(heights));
+        }
+
+        return maxArea;
+    }
+
+    private int largestRectangleArea(int[] heights) {
+        int maxArea = 0;
+        for (int i = 0; i < heights.length; i++) {
+            int height = heights[i];
+            int width = findNextSmallerIndex(heights, i) - (findPreviousSmallerIndex(heights, i) + 1);
+            int area = height * width;
+            maxArea = Math.max(maxArea, area);
+        }
+        return maxArea;
+    }
+
+    private int findPreviousSmallerIndex(int[] heights, int index) {
+        for (int i = index - 1; i >= 0; i--) {
+            if (heights[i] < heights[index]) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private int findNextSmallerIndex(int[] heights, int index) {
+        for (int i = index + 1; i < heights.length; i++) {
+            if (heights[i] < heights[index]) {
+                return i;
+            }
+        }
+        return heights.length;
+    }
+}
+
+
+//Better Approach
+
+//Naive Implementation
+
+class Solution {
+    public int maximalRectangle(char[][] matrix) {
+        int maxArea = 0;
+        int[] heights = new int[matrix[0].length];
+
+        for (int row = 0; row < matrix.length; row++) {
+            for (int col = 0; col < matrix[0].length; col++) {
+                if (matrix[row][col] == '1') {
+                    heights[col] += 1;
+                } else {
+                    heights[col] = 0;
+                }
+            }
+
+            maxArea = Math.max(maxArea, largestRectangleArea(heights));
+        }
+
+        return maxArea;
+    }
+
+    private int largestRectangleArea(int[] heights) {
+        int maxArea = 0;
+        int[] nextSmallerElementIndex = findNextSmallerIndices(heights);
+        int[] previousSmallerElementIndex = findPreviousSmallerIndices(heights);
+
+        for (int i = 0; i < heights.length; i++) {
+            int currentHeight = heights[i];
+            int width = nextSmallerElementIndex[i] - previousSmallerElementIndex[i] - 1;
+            int area = currentHeight * width;
+            maxArea = Math.max(maxArea, area);
+        }
+
+        return maxArea;
+    }
+
+    private int[] findPreviousSmallerIndices(int[] heights) {
+        Deque<Integer> stack = new ArrayDeque<>();
+        int[] previousSmallerElementIndex = new int[heights.length];
+
+        for (int i = 0; i < heights.length; i++) {
+            while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) {
+                stack.pop();
+            }
+
+            if (stack.isEmpty()) {
+                previousSmallerElementIndex[i] = -1;
+            } else {
+                previousSmallerElementIndex[i] = stack.peek();
+            }
+
+            stack.push(i);
+        }
+
+        return previousSmallerElementIndex;
+    }
+
+    private int[] findNextSmallerIndices(int[] heights) {
+        Deque<Integer> stack = new ArrayDeque<>();
+        int[] nextSmallerElementIndex = new int[heights.length];
+
+        for (int i = heights.length - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) {
+                stack.pop();
+            }
+
+            if (stack.isEmpty()) {
+                nextSmallerElementIndex[i] = heights.length;
+            } else {
+                nextSmallerElementIndex[i] = stack.peek();
+            }
+
+            stack.push(i);
+        }
+
+        return nextSmallerElementIndex;
+    }
+}
+
+
+//Optimal Implementation 
+
+class Solution {
+    private Deque<Integer> stack;
+
+    public int maximalRectangle(char[][] matrix) {
+        int maxArea = 0;
+        int[] heights = new int[matrix[0].length];
+
+        for (int row = 0; row < matrix.length; row++) {
+            for (int col = 0; col < matrix[0].length; col++) {
+                if (matrix[row][col] == '1') {
+                    heights[col] += 1;
+                } else {
+                    heights[col] = 0;
+                }
+            }
+
+            maxArea = Math.max(maxArea, largestRectangleArea(heights));
+        }
+
+        return maxArea;
+    }
+
+    private int largestRectangleArea(int[] heights) {
+        int maxArea = 0;
+        stack = new ArrayDeque<>();
+        int[] nextSmallerElementIndex = findNextSmallerElementIndices(heights);
+        stack.clear();
+
+        for (int i = 0; i < heights.length; i++) {
+            while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) {
+                stack.pop();
+            }
+
+            int previousSmallerElementIndex = stack.isEmpty() ? -1 : stack.peek();
+
+            int height = heights[i];
+            int width = nextSmallerElementIndex[i] - previousSmallerElementIndex - 1;
+            int area = height * width;
+            maxArea = Math.max(maxArea, area);
+            stack.push(i);
+        }
+
+        return maxArea;
+    }
+
+    private int[] findNextSmallerElementIndices(int[] heights) {
+        int[] nextSmallerElementIndex = new int[heights.length];
+
+        for (int i = heights.length - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) {
+                stack.pop();
+            }
+
+            if (stack.isEmpty()) {
+                nextSmallerElementIndex[i] = heights.length;
+            } else {
+                nextSmallerElementIndex[i] = stack.peek();
+            }
+
+            stack.push(i);
+        }
+
+        return nextSmallerElementIndex;
+    }
+}
+
+
+//Optimal Approach
+
+class Solution {
+    public int maximalRectangle(char[][] matrix) {
+        int maxArea = 0;
+        int[] heights = new int[matrix[0].length];
+
+        for (int row = 0; row < matrix.length; row++) {
+            for (int col = 0; col < matrix[0].length; col++) {
+                if (matrix[row][col] == '1') {
+                    heights[col] += 1;
+                } else {
+                    // Reset height to 0 if the current cell is '0'
+                    heights[col] = 0;
+                }
+            }
+
+            maxArea = Math.max(maxArea, largestRectangleArea(heights));
+        }
+
+        return maxArea;
+    }
+
+    private int largestRectangleArea(int[] heights) {
+        Deque<Integer> stack = new ArrayDeque<>();
+        int maxArea = 0;
+
+        for (int i = 0; i < heights.length; i++) {
+            while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) {
+                int height = heights[stack.pop()];
+                int previousSmallerElementIndex = stack.isEmpty() ? -1 : stack.peek();
+                int width = i - previousSmallerElementIndex - 1;
+                maxArea = Math.max(maxArea, height * width);
+            }
+            stack.push(i);
+        }
+
+        while (!stack.isEmpty()) {
+            int height = heights[stack.pop()];
+            int previousSmallerElementIndex = stack.isEmpty() ? -1 : stack.peek();
+            int width = heights.length - previousSmallerElementIndex - 1;
+            maxArea = Math.max(maxArea, height * width);
+        }
+
+        return maxArea;
+    }
+}
