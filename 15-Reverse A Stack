@@ -18,7 +18,7 @@ public class Solution {
 
 //Recursive Approach
 
-//Naive Implementation (Using Extra Space)
+//Using Extra Space
 
 public class Solution {
     public static void reverseStack(Stack<Integer> stack) {
@@ -29,7 +29,7 @@ public class Solution {
         int topElement = stack.pop();
         reverseStack(stack);
 
-        Stack<Integer> temporaryStack = new Stack<>();
+        Deque<Integer> temporaryStack = new ArrayDeque<>();
         while (!stack.isEmpty()) {
             temporaryStack.push(stack.pop());
         }
