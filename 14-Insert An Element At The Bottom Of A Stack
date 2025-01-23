@@ -1,8 +1,8 @@
-//Iterative Approach
+//Using Extra Space
 
 public class Solution {
     public static Stack<Integer> pushAtBottom(Stack<Integer> stack, int x) {
-        Stack<Integer> auxStack = new Stack<>();
+        Deque<Integer> auxStack = new ArrayDeque<>();
 
         while (!stack.isEmpty()) {
             auxStack.push(stack.pop());
@@ -15,31 +15,6 @@ public class Solution {
         }
 
         return stack;
-    }
-}
-
-
-//Recursive Approach
-
-//Using Extra Space
-
-public class Solution {
-    public static Stack<Integer> pushAtBottom(Stack<Integer> stack, int x) {
-        insertAtBottomWithAuxiliaryStack(stack, new Stack<>(), x);
-        return stack;
-    }
-
-    private static void insertAtBottomWithAuxiliaryStack(Stack<Integer> stack, Stack<Integer> auxiliaryStack, int x) {
-        if (stack.isEmpty()) {
-            stack.push(x);
-            while (!auxiliaryStack.isEmpty()) {
-                stack.push(auxiliaryStack.pop());
-            }
-            return;
-        }
-        auxiliaryStack.push(stack.pop());
-
-        insertAtBottomWithAuxiliaryStack(stack, auxiliaryStack, x);
     }
 }
 
