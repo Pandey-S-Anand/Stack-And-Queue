@@ -1,214 +1,341 @@
 //Using Two Queue
 
-class MyStack {
-    private MyQueue mainQueue;
-    private MyQueue helperQueue;
+class MyQueue {
+    // Array used to store queue elements
+    private int[] queue;
 
-    public MyStack() {
-        mainQueue = new MyQueue(100); // Initialize mainQueue with size 100
-        helperQueue = new MyQueue(100); // Initialize helperQueue with size 100
+    /**
+     * front → index of element to be dequeued next
+     * rear  → index of last inserted element
+     */
+    private int front;
+    private int rear;
+
+    MyQueue(int capacity) {
+        queue = new int[capacity];
+        front = rear = -1; // -1 indicates the queue is empty
     }
 
+    // Inserts an element at the rear of the queue.
+    public void enqueue(int data) {
+        if (isFull()) {
+            return; // Ignore insertion if queue is full
+        }
+
+        // First insertion in the queue
+        if (isEmpty()) {
+            front = rear = 0;
+        } else {
+            rear++;
+        }
+
+        queue[rear] = data;
+    }
+
+    // Removes and returns the element at the front of the queue.
+    public int dequeue() {
+        if (isEmpty()) {
+            return -1;
+        }
+
+        int removedElement = queue[front];
+
+        // If this was the last element, reset queue state
+        if (front == rear) {
+            front = rear = -1;
+        } else {
+            front++;
+        }
+
+        return removedElement;
+    }
+
+    // Returns the front element without removing it.
+    public int peek() {
+        if (isEmpty()) {
+            return -1;
+        }
+
+        return queue[front];
+    }
+
+    // Checks whether the queue is full.
+    private boolean isFull() {
+        return rear == queue.length - 1;
+    }
+
+    // Checks whether the queue is empty.
+    public boolean isEmpty() {
+        return front == -1 && rear == -1;
+    }
+
+    // Returns the current number of elements in the queue.
+    public int getSize() {
+        if (isEmpty()) {
+            return 0;
+        }
+
+        return rear - front + 1;
+    }
+}
+
+class MyStack {
+
+    /**
+     * Queue capacity.
+     *
+     * Constraint from the problem:
+     * At most 100 calls will be made to push, pop, top, and empty.
+     *
+     * In the worst case scenario, all 100 operations could be push.
+     * Therefore the maximum number of elements present in the stack
+     * at any time cannot exceed 100.
+     *
+     * Since the stack is internally implemented using queues,
+     * the queues also need capacity to hold up to 100 elements.
+     */
+    private static int QUEUE_SIZE;
+
+    /**
+     * mainQueue → always stores the stack elements such that
+     * the front of the queue represents the top of the stack.
+     *
+     * auxQueue → temporary queue used during push operation
+     * to reorder elements.
+     */
+    private MyQueue mainQueue;
+    private MyQueue auxQueue;
+
+    public MyStack() {
+        QUEUE_SIZE = 100;
+        mainQueue = new MyQueue(QUEUE_SIZE);
+        auxQueue = new MyQueue(QUEUE_SIZE);
+    }
+
+    /**
+     * Push operation
+     *
+     * Goal:
+     * Maintain the invariant that the front of mainQueue
+     * always represents the top of the stack.
+     *
+     * Strategy (using two queues):
+     *
+     * 1. Move all existing elements from mainQueue → auxQueue.
+     *    This temporarily empties mainQueue.
+     *
+     * 2. Insert the new element into mainQueue.
+     *    Since mainQueue was empty, this element
+     *    automatically becomes the front element.
+     *
+     * 3. Move back all elements from auxQueue → mainQueue.
+     *    These elements are placed behind the new element.
+     *
+     * Result:
+     * The most recently inserted element always stays
+     * at the front of mainQueue, satisfying LIFO behavior.
+     *
+     * Example:
+     *
+     * push(1)
+     * mainQueue = [1]
+     *
+     * push(2)
+     * move main → aux : aux=[1]
+     * main.enqueue(2) : main=[2]
+     * move aux → main : main=[2,1]
+     *
+     * push(3)
+     * move main → aux : aux=[2,1]
+     * main.enqueue(3) : main=[3]
+     * move aux → main : main=[3,2,1]
+     *
+     * Now queue front always represents the stack top.
+     */
     public void push(int x) {
-        if (!mainQueue.isFull()) {
-            if (mainQueue.isEmpty()) {
-                mainQueue.enqueue(x);
-            } else {
-                // Transfer elements from mainQueue to helperQueue
-                while (!mainQueue.isEmpty()) {
-                    helperQueue.enqueue(mainQueue.dequeue());
-                }
+        // Move all elements from mainQueue to auxQueue
+        while (!mainQueue.isEmpty()) {
+            auxQueue.enqueue(mainQueue.dequeue());
+        }
 
-                // Enqueue the new element into mainQueue
-                mainQueue.enqueue(x);
+        // Insert the new element into mainQueue
+        mainQueue.enqueue(x);
 
-                // Transfer elements back from helperQueue to mainQueue
-                while (!helperQueue.isEmpty()) {
-                    mainQueue.enqueue(helperQueue.dequeue());
-                }
-            }
+        // Move elements back so that new element remains at front
+        while (!auxQueue.isEmpty()) {
+            mainQueue.enqueue(auxQueue.dequeue());
         }
     }
 
+    /**
+     * Since push ensured that the newest element
+     * is always at the front of mainQueue,
+     * removing the stack top simply becomes
+     * a dequeue operation.
+     */
     public int pop() {
         return mainQueue.dequeue();
     }
 
+    // Returns the current top element of the stack
     public int top() {
         return mainQueue.peek();
     }
 
+    // Checks whether the stack is empty.
     public boolean empty() {
         return mainQueue.isEmpty();
     }
 }
 
-class MyQueue {
-    private int[] queue;
-    private int front;
-    private int rear;
-
-    public MyQueue(int size) {
-        queue = new int[size];
-        front = rear = -1;
-    }
-
-    // Enqueue element into the queue
-    public void enqueue(int x) {
-        if (!isFull()) {
-            if (isEmpty()) {
-                front = rear = 0;
-            } else {
-                rear++;
-            }
-            queue[rear] = x;
-        }
-    }
-
-    // Dequeue element from the queue
-    public int dequeue() {
-        if (isEmpty()) {
-            return -1;
-        }
-
-        int removedElement = queue[front];
-        if (front == rear) {
-            front = rear = -1;
-        } else {
-            front++;
-        }
-        return removedElement;
-    }
-
-    // Check if the queue is empty
-    public boolean isEmpty() {
-        return front == -1;
-    }
-
-    // Check if the queue is full
-    public boolean isFull() {
-        return rear == queue.length - 1;
-    }
-
-    // Peek the front element of the queue
-    public int peek() {
-        if (isEmpty()) {
-            return -1;
-        }
-        return queue[front];
-    }
-
-    // Get the size of the queue (number of elements)
-    public int size() {
-        if (isEmpty()) {
-            return 0;
-        }
-        return rear - front + 1;
-    }
-}
-
-
 
 //Using One Queue
 
-class MyStack {
-    private MyQueue queue;
-
-    public MyStack() {
-        queue = new MyQueue(100);
-    }
-
-    public void push(int x) {
-        // Enqueue the new element to the queue.
-        queue.enqueue(x);
-
-        /*
-         * After enqueuing, rotate the queue such that the new element becomes the front
-         * of the queue. You can do this by dequeuing all elements and enqueuing them
-         * back, which ensures the order of elements in the queue is changed to simulate a stack.
-         */
-        int size = queue.size();
-        for (int i = 0; i < size - 1; i++) {
-            queue.enqueue(queue.dequeue()); // Dequeue from the front and enqueue to the back
-        }
-    }
-
-    // Removes the element on the top of the stack and returns it
-    public int pop() {
-        return queue.dequeue();
-    }
-
-    // Get the top element
-    public int top() {
-        return queue.peek();
-    }
-
-    // Returns whether the stack is empty
-    public boolean empty() {
-        return queue.isEmpty();
-    }
-}
-
 class MyQueue {
     private int[] queue;
+
     private int front;
     private int rear;
 
-    public MyQueue(int size) {
-        queue = new int[size];
+    MyQueue(int capacity) {
+        queue = new int[capacity];
         front = rear = -1;
     }
 
-    // Enqueue element into the queue
-    public void enqueue(int x) {
-        if (!isFull()) {
-            if (isEmpty()) {
-                front = rear = 0;
-            } else {
-                rear++;
-            }
-            queue[rear] = x;
+    public void enqueue(int data) {
+        if (isFull()) {
+            return;
         }
+
+        if (isEmpty()) {
+            front = rear = 0;
+        } else {
+            rear++;
+        }
+
+        queue[rear] = data;
     }
 
-    // Dequeue element from the queue
     public int dequeue() {
         if (isEmpty()) {
             return -1;
         }
 
         int removedElement = queue[front];
+
         if (front == rear) {
             front = rear = -1;
         } else {
             front++;
         }
+
         return removedElement;
     }
 
-    // Check if the queue is empty
-    public boolean isEmpty() {
-        return front == -1;
-    }
-
-    // Check if the queue is full
-    public boolean isFull() {
-        return rear == queue.length - 1;
-    }
-
-    // Peek the front element of the queue
     public int peek() {
         if (isEmpty()) {
             return -1;
         }
+
         return queue[front];
     }
 
-    // Get the size of the queue (number of elements)
-    public int size() {
+    private boolean isFull() {
+        return rear == queue.length - 1;
+    }
+
+    public boolean isEmpty() {
+        return front == -1 && rear == -1;
+    }
+
+    public int getSize() {
         if (isEmpty()) {
             return 0;
         }
+
         return rear - front + 1;
+    }
+}
+
+class MyStack {
+    private static int QUEUE_SIZE;
+    private MyQueue stack;
+
+    public MyStack() {
+        QUEUE_SIZE = 100;
+        stack = new MyQueue(QUEUE_SIZE);
+    }
+
+    /**
+     * Push operation
+     *
+     * Key Challenge:
+     * A queue follows FIFO (First In First Out),
+     * whereas a stack requires LIFO (Last In First Out).
+     *
+     * We are restricted to using only standard queue operations:
+     * - push to back (enqueue)
+     * - pop/peek from front (dequeue)
+     * - size
+     * - isEmpty
+     *
+     * To simulate stack behavior, after inserting the new element
+     * we rotate the queue to the left by (currentSize - 1) steps.
+     *
+     * This rotation moves the newly inserted element from the rear
+     * of the queue to the front, ensuring that the most recently
+     * inserted element always stays at the front.
+     *
+     * As a result, the front of the queue always represents
+     * the top of the stack.
+     *
+     * Steps:
+     * 1. Insert the new element at the rear of the queue.
+     * 2. Rotate the existing elements behind the new element
+     *    by performing (size - 1) dequeue → enqueue operations.
+     *
+     * Example:
+     *
+     * push(1)
+     * queue = [1]
+     *
+     * push(2)
+     * enqueue → [1,2]
+     * rotate  → [2,1]
+     *
+     * push(3)
+     * enqueue → [2,1,3]
+     * rotate  → [3,2,1]
+     *
+     * Now the queue front always holds the stack top.
+     */
+    public void push(int x) {
+        stack.enqueue(x);
+
+        int size = stack.getSize();
+
+        // Rotate previous elements behind the new element
+        for (int i = 1; i <= size - 1; i++) {
+            stack.enqueue(stack.dequeue());
+        }
+    }
+
+    /**
+     *
+     * Since the newest element is always positioned
+     * at the front of the queue, we simply dequeue.
+     */
+    public int pop() {
+        return stack.dequeue();
+    }
+
+    // Returns the current top element of the stack
+    public int top() {
+        return stack.peek();
+    }
+
+    // Checks whether the stack is empty.
+    public boolean empty() {
+        return stack.isEmpty();
     }
 }
