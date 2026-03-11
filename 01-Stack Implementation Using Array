@@ -1,49 +1,83 @@
 public class Solution {
     static class Stack {
+        // Array used to store stack elements
         private int[] stack;
+
+        // Index of the top element in the stack
         private int top;
 
+        // Constructor to initialize stack with given capacity.
         Stack(int capacity) {
             stack = new int[capacity];
-            top = -1;
+            top = -1; // top = -1 means stack is empty
         }
 
+        /**
+         * Push operation:
+         * Adds an element to the top of the stack.
+         *
+         * If the stack is already full, the push operation
+         * is ignored.
+         */
         public void push(int num) {
-            if (isFull() == 0) {
-                stack[++top] = num;
+            // Check overflow condition
+            if (isFull() == 1) {
+                return;
             }
+
+            // Move top pointer and insert element
+            stack[++top] = num;
         }
 
+        /**
+         * Pop operation:
+         * Removes and returns the top element of the stack.
+         *
+         * If the stack is empty, return -1.
+         */
         public int pop() {
-            if (isEmpty() == 1) {
+            // Underflow condition
+            if (top == -1) {
                 return -1;
             }
 
+            // Return element and move top pointer down
             return stack[top--];
         }
 
+        /**
+         * Returns the top element without removing it.
+         *
+         * If the stack is empty, return -1.
+         */
         public int top() {
-            if (isEmpty() == 1) {
+            if (top == -1) {
                 return -1;
             }
 
             return stack[top];
         }
 
+        /**
+         * Checks whether the stack is empty.
+         *
+         * Returns:
+         * 1 ? stack is empty
+         * 0 ? stack has elements
+         */
         public int isEmpty() {
-            if (top == -1) {
-                return 1;
-            }
-
-            return 0;
+            return top == -1 ? 1 : 0;
         }
 
+        /**
+         * Checks whether the stack is full.
+         *
+         * Returns:
+         * 1 ? stack is full
+         * 0 ? space is still available
+         */
         public int isFull() {
-            if (top == stack.length - 1) {
-                return 1;
-            }
-
-            return 0;
+            return top == stack.length - 1 ? 1 : 0;
         }
     }
 }
