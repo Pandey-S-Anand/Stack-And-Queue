@@ -28,109 +28,232 @@
 
 //Bruteforce Approach (Push operation : O(1) and Pop operation : O(n))
 
+class SinglyLinkedList {
+    // Pointer to the first node of the list
+    private Node head;
+
+    // Pointer to the last node of the list
+    private Node tail;
+
+    // Tracks number of nodes in the list
+    private int size;
+
+    public SinglyLinkedList() {
+        head = tail = null;
+        size = 0;
+    }
+
+    /**
+     * Appends a new node at the end of the list.
+     * This operation is used to implement the stack push operation.
+     */
+    public void append(int data) {
+        Node node = new Node(data);
+
+        // If list is empty, both head and tail point to new node
+        if (head == null) {
+            head = tail = node;
+        } else {
+            // Attach the new node after the current tail
+            tail.next = node;
+            // Update tail to the new node
+            tail = tail.next;
+        }
+
+        size++;
+    }
+
+    /**
+     * Removes the last node of the list.
+     *
+     * Since this is a singly linked list, we cannot directly
+     * move backwards from tail to find the previous node.
+     *
+     * Therefore we must traverse from the head to find
+     * the node just before the tail.
+     *
+     * This method is used to implement the stack pop operation.
+     */
+    public void removeLastNode() {
+        if (size == 0) {
+            return;
+        }
+
+        Node prev = null;
+        Node node = head;
+
+        // Traverse until we reach the last node while keeping track of the previous node
+        while (node.next != null) {
+            prev = node;
+            node = node.next;
+        }
+
+        /*
+         * If prev == null, it means there was only one node
+         * in the list. Removing it makes the list empty.
+         */
+        if (prev == null) {
+            head = tail = null;
+        } else {
+            // Disconnect the last node
+            prev.next = null;
+            // Update tail to the previous node
+            tail = prev;
+        }
+
+        size--;
+    }
+
+    // Returns the number of nodes currently present in the list
+    public int getSize() {
+        return size;
+    }
+
+    /**
+     * Returns the value stored at the tail node.
+     *
+     * Since the stack top corresponds to the last inserted element,
+     * we treat the tail node as the top of the stack.
+     */
+    public int getTop() {
+        if (isEmpty()) {
+            return -1;
+        }
+
+        return tail.data;
+    }
+
+    // Checks whether the list is empty
+    public boolean isEmpty() {
+        return size == 0;
+    }
+}
+
 public class Solution {
     static class Stack {
+        // Underlying data structure used to store stack elements
         private SinglyLinkedList singlyLinkedList;
 
         Stack() {
             singlyLinkedList = new SinglyLinkedList();
         }
 
+        // Returns the current number of elements in the stack
         int getSize() {
             return singlyLinkedList.getSize();
         }
 
+        // Checks whether the stack is empty
         boolean isEmpty() {
-            return singlyLinkedList.getHead() == null;
+            return singlyLinkedList.isEmpty();
         }
 
+        /**
+         * Inserts a new element at the end of the list,
+         * which represents the top of the stack.
+         */
         void push(int data) {
             singlyLinkedList.append(data);
         }
 
+        /**     
+         * Removes the last node of the list,
+         * which represents the top element of the stack.
+         */
         void pop() {
             singlyLinkedList.removeLastNode();
         }
 
+        // Returns the element currently at the top of the stack 
         int getTop() {
-            Node tail = singlyLinkedList.getTail();
-            return tail == null ? -1 : tail.data;
+            return singlyLinkedList.getTop();
         }
-    }
-}
-
-class SinglyLinkedList {
-    private Node head; // Head of the list
-    private Node tail; // Tail of the list
-
-    public Node getHead() {
-        return head;
-    }
-
-    public Node getTail() {
-        return tail;
-    }
-
-    // Append a new node with the given data to the end of the singly linked list
-    public void append(int data) {
-        Node newNode = new Node(data);
-
-        if (head == null) {
-            head = tail = newNode;
-        } else {
-            tail.next = newNode;
-            tail = newNode;
-        }
-    }
-
-    // Remove the tail node from the singly linked list
-    public void removeLastNode() {
-        if (head != null) { // If the singly linked list is not empty
-            Node currentNode = head;
-            Node prevNode = null;
-
-            // Traverse the list to reach the last node
-            while (currentNode.next != null) {
-                prevNode = currentNode;
-                currentNode = currentNode.next;
-            }
-
-            // If there is only one node, it will be both the tail and head node. Deleting it will make the singly linked list empty.
-            if (prevNode == null) {
-                head = tail = null;
-            } else {
-                prevNode.next = null; // Remove the last node by setting the previous node's next pointer to null
-                tail = prevNode; // Update the tail to the previous node
-            }
-        }
-    }
-
-    public int getSize() {
-        int size = 0;
-        Node fast = head; // Use a fast pointer to traverse the list in a way that counts two nodes at a time
-
-        while (fast != null && fast.next != null) {
-            fast = fast.next.next; // Move fast pointer two steps
-            size += 2; // Increment size by 2 as we are moving two nodes at a time
-        }
-
-        if (fast != null) { // In case of an odd length singly linked list, the fast pointer will point to the last node
-            size++; // Add one to count the last node
-        }
-
-        return size;
     }
 }
 
 
 // Optimal Approach (Push operation : O(1) and Pop operation : O(1))
-/*
- * Optimal Approach: 
- * The stack's push operation inserts elements at the front of the list, 
- * and pop removes the first node, both in constant time O(1).
- */
 
-//Naive Implementation
+
+class SinglyLinkedList {
+    // Pointer to the first node of the list.
+    // In this implementation, the head represents the top of the stack.
+    private Node head;
+
+    // Tracks the number of nodes currently present in the list
+    private int size;
+
+    public SinglyLinkedList() {
+        head = null;
+        size = 0;
+    }
+
+    /**
+     * Inserts a new node at the front of the list.
+     *
+     * This operation is used to implement the stack push operation.
+     *
+     * Why front insertion?
+     * --------------------
+     * By treating the head of the list as the stack top,
+     * we can perform push in O(1) time without traversing the list.
+     */
+    public void insertAtFront(int data) {
+        Node node = new Node(data);
+
+        // If the list is empty, the new node becomes the head
+        if (getSize() == 0) {
+            head = node;
+        } else {
+            // Insert the node before the current head
+            node.next = head;
+            head = node;
+        }
+
+        size++;
+    }
+
+    /**
+     * Removes the first node of the list.
+     *
+     * Since the head represents the stack top,
+     * removing the head corresponds to the stack pop operation.
+     */
+    public void removeFirstNode() {
+        if (size == 0) {
+            return;
+        }
+
+        // Move head to the next node
+        head = head.next;
+
+        size--;
+    }
+
+    // Returns the current number of elements in the list
+    public int getSize() {
+        return size;
+    }
+
+    /**
+     * Returns the value stored at the head node.
+     *
+     * Since the head represents the stack top,
+     * this method returns the current top element of the stack.
+     */
+    public int getTop() {
+        if (isEmpty()) {
+            return -1;
+        }
+
+        return head.data;
+    }
+
+    // Checks whether the list is empty
+    public boolean isEmpty() {
+        return size == 0;
+    }
+}
 
 public class Solution {
     static class Stack {
@@ -140,127 +263,42 @@ public class Solution {
             singlyLinkedList = new SinglyLinkedList();
         }
 
+        // Returns the current number of elements in the stack
         int getSize() {
             return singlyLinkedList.getSize();
         }
 
+        // Checks whether the stack is empty
         boolean isEmpty() {
-            return singlyLinkedList.getHead() == null;
+            return singlyLinkedList.isEmpty();
         }
 
+        /**
+         * Push operation
+         *
+         * Inserts the element at the head of the list,
+         * which represents the stack top.
+         */
         void push(int data) {
-            singlyLinkedList.addAtFront(data);
+            singlyLinkedList.insertAtFront(data);
         }
 
+        /**
+         * Pop operation
+         *
+         * Removes the head node,
+         * which corresponds to removing the stack top.
+         */
         void pop() {
             singlyLinkedList.removeFirstNode();
         }
 
+        /**
+         * Returns the element currently at the top
+         * of the stack.
+         */
         int getTop() {
-            Node head = singlyLinkedList.getHead();
-            return head == null ? -1 : head.data;
-        }
-    }
-}
-
-class SinglyLinkedList {
-    private Node head;
-
-    public Node getHead() {
-        return head;
-    }
-
-    public void addAtFront(int data) {
-        Node newNode = new Node(data);
-
-        if (head == null) {
-            head = newNode;
-        } else {
-            newNode.next = head;
-            head = newNode;
-        }
-    }
-
-    public void removeFirstNode() {
-        if (head != null) {
-            if(head.next==null){
-              head=null;
-            }else{
-              head=head.next; 
-            }
-        }
-    }
-
-    public int getSize() {
-        int size = 0;
-        Node fast = head;
-
-        while (fast != null && fast.next != null) {
-            fast = fast.next.next;
-            size += 2;
-        }
-
-        if (fast != null) {
-            size++;
-        }
-
-        return size;
-    }
-}
-
-
-//Optimal Implementation
-
-public class Solution {
-    static class Stack {
-        private Node head;
-
-        Stack() {
-        }
-
-        int getSize() {
-            int size = 0;
-            Node fast = head;
-
-            while (fast != null && fast.next != null) {
-                fast = fast.next.next;
-                size += 2;
-            }
-
-            if (fast != null) {
-                size++;
-            }
-
-            return size;
-        }
-
-        boolean isEmpty() {
-            return head == null;
-        }
-
-        void push(int data) {
-            Node newNode = new Node(data);
-
-            if (head == null) {
-                head = newNode;
-            } else {
-                newNode.next = head;
-                head = newNode;
-            }
-        }
-
-        void pop() {
-            if (head != null) {
-                if (head.next == null) {
-                    head = null;
-                } else {
-                    head = head.next;
-                }
-            }
-        }
-
-        int getTop() {
-            return head == null ? -1 : head.data;
+            return singlyLinkedList.getTop();
         }
     }
 }
