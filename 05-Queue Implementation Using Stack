@@ -1,79 +1,186 @@
-// Naive Implementation
+// Naive Approach
 
-class MyQueue {
-    private MyStack mainStack;
-    private MyStack helperStack;
+class MyStack {
+    // Maximum number of elements the stack can hold
+    private int MAX_CAPACITY;
 
-    public MyQueue() {
-        mainStack = new MyStack(100);
-        helperStack = new MyStack(100);
+    // Index of the current top element
+    private int top;
+
+    // Underlying array used to store stack elements
+    private int[] arr;
+
+    MyStack(int capacity) {
+        MAX_CAPACITY = capacity;
+        arr = new int[MAX_CAPACITY];
+        top = -1; // -1 indicates stack is empty
     }
 
-    public void push(int x) {
-        if (!mainStack.isFull()) {
-            mainStack.push(x);
+    //Inserts a new element at the top of the stack.
+    public void push(int data) {
+        // Prevent overflow
+        if (isFull()) {
+            return;
         }
+
+        arr[++top] = data;
     }
 
+    //Removes and returns the element from the top of the stack.
     public int pop() {
-        if (mainStack.isEmpty()) {
+        // Underflow condition
+        if (isEmpty()) {
             return -1;
         }
 
-        /*
-         * Transfer all elements from main stack to helper stack
-         * This reverses the order of elements, allowing the first pushed element to be accessed first
-         */
-        while (!mainStack.isEmpty()) {
-            helperStack.push(mainStack.pop());
+        return arr[top--];
+    }
+
+    //Returns the top element without removing it.
+    public int peek() {
+        if (isEmpty()) {
+            return -1;
         }
-        // Pop the top element from helper stack (which is the front of the queue)
-        int removedElement = helperStack.pop();
-        
-        // Transfer all elements back to the main stack to maintain original order for future push operations
-        while (!helperStack.isEmpty()) {
-            mainStack.push(helperStack.pop());
+
+        return arr[top];
+    }
+
+    // Checks if stack has reached maximum capacity
+    public boolean isFull() {
+        return top == arr.length - 1;
+    }
+
+    // Checks whether stack is empty
+    public boolean isEmpty() {
+        return top == -1;
+    }
+
+    // Returns current number of elements
+    private int getSize() {
+        return top + 1;
+    }
+}
+
+class MyQueue {
+    /**
+     * Queue implemented using two stacks.
+     *
+     * Key Challenge:
+     * A queue follows FIFO (First In First Out),
+     * while a stack follows LIFO (Last In First Out).
+     *
+     * We simulate FIFO behavior by reversing the order
+     * of elements using two stacks.
+     *
+     * mainStack → stores elements in insertion order
+     * auxStack  → temporary stack used to reverse order
+     */
+    private MyStack mainStack;
+    private MyStack auxStack;
+
+    public MyQueue() {
+        mainStack = new MyStack(100);
+        auxStack = new MyStack(100);
+    }
+
+    /**
+     * Enqueue operation
+     *
+     * Simply push the new element onto mainStack.
+     *
+     * This represents inserting at the rear of the queue.
+     */
+    public void push(int x) {
+        mainStack.push(x);
+    }
+
+    /**
+     * Dequeue operation
+     *
+     * To remove the front element of the queue:
+     *
+     * 1. Move all elements from mainStack → auxStack.
+     *    This reverses the order.
+     *
+     *    Example:
+     *    mainStack: [1,2,3] (top = 3)
+     *
+     *    auxStack after transfer:
+     *    [3,2,1] (top = 1)
+     *
+     * 2. Pop from auxStack.
+     *    This removes the oldest inserted element.
+     *
+     * 3. Move elements back to mainStack to restore order.
+     */
+    public int pop() {
+        // Reverse stack order
+        while (!mainStack.isEmpty()) {
+            auxStack.push(mainStack.pop());
+        }
+
+        // Remove the front element of the queue
+        int removedElement = auxStack.pop();
+
+        // Restore elements back to mainStack
+        while (!auxStack.isEmpty()) {
+            mainStack.push(auxStack.pop());
         }
 
         return removedElement;
     }
 
+    /**
+     * Peek operation
+     *
+     * Similar to dequeue, but instead of removing
+     * the front element we only inspect it.
+     */
     public int peek() {
-        if (mainStack.isEmpty()) {
-            return -1;
-        }
-
+        // Reverse stack order
         while (!mainStack.isEmpty()) {
-            helperStack.push(mainStack.pop());
+            auxStack.push(mainStack.pop());
         }
 
-        int peakElement = helperStack.peek();
+        // Peek the element that represents queue front
+        int topElement = auxStack.peek();
 
-        while (!helperStack.isEmpty()) {
-            mainStack.push(helperStack.pop());
+        // Restore stack
+        while (!auxStack.isEmpty()) {
+            mainStack.push(auxStack.pop());
         }
 
-        return peakElement;
+        return topElement;
     }
 
+    // Checks whether the queue is empty
     public boolean empty() {
         return mainStack.isEmpty();
     }
 }
 
-class MyStack {
-    private int[] stack;
-    int top;
 
-    MyStack(int size) {
-        stack = new int[size];
+// Optimal Approach
+
+class MyStack {
+    private int MAX_CAPACITY;
+
+    private int top;
+
+    private int[] arr;
+
+    MyStack(int capacity) {
+        MAX_CAPACITY = capacity;
+        arr = new int[MAX_CAPACITY];
         top = -1;
     }
 
-    public void push(int num) {
-        if (!isFull()) {
-            stack[++top] = num;
+    public void push(int data) {
+        if (isFull()) {
+            return;
         }
+
+        arr[++top] = data;
     }
 
     public int pop() {
@@ -81,7 +188,7 @@ class MyStack {
             return -1;
         }
 
-        return stack[top--];
+        return arr[top--];
     }
 
     public int peek() {
@@ -89,139 +196,117 @@ class MyStack {
             return -1;
         }
 
-        return stack[top];
+        return arr[top];
     }
 
     public boolean isFull() {
-        return top == stack.length - 1;
+        return top == arr.length - 1;
     }
 
     public boolean isEmpty() {
         return top == -1;
     }
 
-    public int size() {
+    public int getSize() {
         return top + 1;
     }
 }
-
-/**
- * Your MyQueue object will be instantiated and called as such:
- * MyQueue obj = new MyQueue();
- * obj.push(x);
- * int param_2 = obj.pop();
- * int param_3 = obj.peek();
- * boolean param_4 = obj.empty();
- */
-
-
-
-// Optimal Implementation
 
 class MyQueue {
-    private MyStack mainStack;
-    private MyStack helperStack;
-
-    private static final int capacity = 100;
-
-    public MyQueue() {
-        mainStack = new MyStack(capacity);
-        helperStack = new MyStack(capacity);
-    }
-
-    public void push(int x) {
-        // Only push to the main stack if the total size of both stacks is less than capacity
-        if ((mainStack.size() + helperStack.size()) < capacity) {
-            mainStack.push(x);
-        }
-    }
-
+    /**
+    * Queue Implementation using Two Stacks (Optimized / Lazy Transfer Technique)
+    *
+    * Core Challenge:
+    * A stack follows LIFO (Last In First Out), whereas a queue requires FIFO
+    * (First In First Out). To simulate queue behavior using stacks, we maintain
+    * two stacks with distinct roles:
+    *
+    * inStack  → used only for enqueue (push) operations
+    * outStack → used only for dequeue (pop) and peek operations
+    *
+    * Intuition:
+    * Elements are always pushed into inStack. This stack therefore keeps the
+    * newest elements on top.
+    *
+    * When we need to remove or inspect the queue's front element, we must access
+    * the *oldest* inserted element. This element will be at the bottom of inStack.
+    *
+    * To expose it efficiently, we reverse the order by transferring all elements
+    * from inStack → outStack. After this transfer, the oldest element becomes the
+    * top of outStack, which corresponds to the front of the queue.
+    *
+    * Example:
+    *
+    * push(1), push(2), push(3)
+    *
+    * inStack (top → bottom)
+    * 3
+    * 2
+    * 1
+    *
+    * Transfer to outStack:
+    *
+    * outStack (top → bottom)
+    * 1
+    * 2
+    * 3
+    *
+    * Now the queue front (1) is accessible via outStack.pop().
+    *
+    *
+    * Why the Optimization Works (Lazy Transfer):
+    * -------------------------------------------
+    * The transfer from inStack → outStack is done only when outStack becomes empty
+    * and we need to perform pop() or peek().
+    *
+    * This means each element moves at most once from inStack to outStack.
+    *
+    * Once elements are in outStack, multiple pop/peek operations can be performed
+    * directly without additional transfers.
+    *
+    *
+    * Why This is Useful:
+    * -------------------
+    * A naive implementation would transfer elements on every pop or peek,
+    * resulting in O(n) time per operation.
+    *
+    * With this lazy transfer strategy:
+    *
+    * push → O(1)
+    * pop  → amortized O(1)
+    * peek → amortized O(1)
+    *
+    * The occasional O(n) transfer cost is spread across many operations,
+    * so the average (amortized) cost per operation remains constant.
+    */
     public int pop() {
-        // If both stacks are empty, return -1
-        if (mainStack.isEmpty() && helperStack.isEmpty()) {
-            return -1;
-        }
-        
-        // If the helper stack is empty, transfer elements from main stack to helper stack
-        if (helperStack.isEmpty()) {
-            while (!mainStack.isEmpty()) {
-                helperStack.push(mainStack.pop()); // Transfer elements to reverse their order
+        // Transfer only when outStack is empty
+        if (outStack.isEmpty()) {
+            while (!inStack.isEmpty()) {
+                outStack.push(inStack.pop());
             }
         }
 
-        return helperStack.pop(); // Pop and return the top element from the helper stack (front of the queue)
+        return outStack.pop();
     }
 
+    /**
+     * Peek operation
+     *
+     * Same logic as pop, except the element is not removed.
+     */
     public int peek() {
-        // If both stacks are empty, return -1
-        if (mainStack.isEmpty() && helperStack.isEmpty()) {
-            return -1;
-        }
-
-        // If the helper stack is empty, transfer elements from main stack to helper stack
-        if (helperStack.isEmpty()) {
-            while (!mainStack.isEmpty()) {
-                helperStack.push(mainStack.pop()); // Transfer elements to reverse their order
+        if (outStack.isEmpty()) {
+            while (!inStack.isEmpty()) {
+                outStack.push(inStack.pop());
             }
         }
 
-        return helperStack.peek(); // Peek at the top element from the helper stack (front of the queue)
+        return outStack.peek();
     }
 
+    // Checks whether the queue is empty
     public boolean empty() {
-        return mainStack.isEmpty() && helperStack.isEmpty();
+        return (inStack.isEmpty() && outStack.isEmpty());
     }
 }
-
-class MyStack {
-    private int[] stack;
-    int top;
-
-    MyStack(int size) {
-        stack = new int[size];
-        top = -1;
-    }
-
-    public void push(int num) {
-        if (!isFull()) {
-            stack[++top] = num;
-        }
-    }
-
-    public int pop() {
-        if (isEmpty()) {
-            return -1;
-        }
-
-        return stack[top--];
-    }
-
-    public int peek() {
-        if (isEmpty()) {
-            return -1;
-        }
-
-        return stack[top];
-    }
-
-    public boolean isFull() {
-        return top == stack.length - 1;
-    }
-
-    public boolean isEmpty() {
-        return top == -1;
-    }
-
-    public int size() {
-        return top + 1;
-    }
-}
-
-/**
- * Your MyQueue object will be instantiated and called as such:
- * MyQueue obj = new MyQueue();
- * obj.push(x);
- * int param_2 = obj.pop();
- * int param_3 = obj.peek();
- * boolean param_4 = obj.empty();
- */
