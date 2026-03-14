@@ -1,43 +1,151 @@
 class Solution {
+    /**
+     * Problem: Valid Parenthesis String
+     *
+     * The string contains three possible characters:
+     *
+     * '(' → opening bracket
+     * ')' → closing bracket
+     * '*' → wildcard
+     *
+     * The wildcard '*' can behave as:
+     * 1) '('
+     * 2) ')'
+     * 3) empty string
+     *
+     * Goal:
+     * Determine whether the string can be interpreted as a valid parentheses sequence.
+     *
+     *
+     * Core Idea
+     * ----------
+     * We maintain two stacks:
+     *
+     * openBracketStack → stores indices of '('
+     * starStack        → stores indices of '*'
+     *
+     * IMPORTANT:
+     * We store INDICES instead of characters because the relative order matters.
+     *
+     * At the end, if some '(' remain unmatched, we must ensure that '*' used as ')'
+     * appear AFTER those '(' in the string.
+     *
+     * A star appearing before '(' cannot act as its closing bracket.
+     *
+     *
+     * Why index is important
+     * ----------------------
+     *
+     * Example:
+     *
+     * "*("
+     *
+     * If we only stored characters, we might incorrectly assume:
+     *
+     * '*' can become ')'
+     *
+     * But this would imply:
+     *
+     * "*(" → ")("
+     *
+     * which is invalid because the closing bracket appears before the opening bracket.
+     *
+     * Using indices ensures correct ordering.
+     *
+     *
+     * Example Scenarios
+     * -----------------
+     *
+     * ()()     → valid
+     *
+     * ((*))    → valid
+     *
+     * ((*)     → '*' becomes ')'
+     *
+     * ((()     → invalid (too many '(')
+     *
+     * ((**)    → '*' can become ')'
+     *
+     * ()*(     → invalid because '*' appears before the final '('
+     *
+     * (*))     → '*' can become '('
+     *
+     */
     public boolean checkValidString(String str) {
+        // Stack storing indices of '('
         Deque<Integer> openBracketStack = new ArrayDeque<>();
+
+        // Stack storing indices of '*'
         Deque<Integer> starStack = new ArrayDeque<>();
 
+        // Traverse the string
         for (int i = 0; i < str.length(); i++) {
             char ch = str.charAt(i);
 
+            // If '(' push its index
             if (ch == '(') {
                 openBracketStack.push(i);
-            } else if (ch == '*') {
+            } else if (ch == '*') { // If '*' push its index
                 starStack.push(i);
-            } else {
+            } else { // If we encounter ')'
+                /*
+                 * Prefer matching ')' with '(' first
+                 * because that is the most natural pairing.
+                 */
                 if (!openBracketStack.isEmpty()) {
                     openBracketStack.pop();
                 } else {
-                    if (!starStack.isEmpty()) {
-                        starStack.pop();
-                    } else {
+                    /*
+                    * If no '(' is available,
+                    * try using '*' as '('.
+                    */
+                    //if no * exist then we can't suffice/ pair ')'
+                    if (starStack.isEmpty()) {
                         return false;
                     }
+                    // Match ')' with '*'
+                    starStack.pop();
                 }
             }
         }
-
+        //brackets matched so return true
         if (openBracketStack.isEmpty()) {
             return true;
         }
 
-        if (openBracketStack.size() > starStack.size()) {
-            return false;
-        }
-
+        /*
+         * After the traversal:
+         *
+         * All ')' have been matched.
+         * But some '(' might still remain.
+         *
+         * These remaining '(' must be matched using '*'
+         * acting as ')'.
+         *
+         * Match remaining '(' with '*' carefully.
+         *
+         * Key constraint:
+         * '*' must appear AFTER '(' in the string
+         * to act as a closing bracket.
+         */
         while (!openBracketStack.isEmpty()) {
-            if (starStack.peek() > openBracketStack.peek()) {
-                openBracketStack.pop();
-                starStack.pop();
-            } else {
+            //can pair the open brzckerts if no '*' are available 
+            if (starStack.isEmpty()) {
                 return false;
             }
+
+            /*
+             * If '(' index is greater than '*' index,
+             * it means '*' appears BEFORE '(',
+             * so it cannot act as its closing bracket.
+             */
+            if (openBracketStack.peek() > starStack.peek()) {
+                return false;
+            }
+
+            // Match '(' with '*'
+            starStack.pop();
+            openBracketStack.pop();
         }
 
         return true;
