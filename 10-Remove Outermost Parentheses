@@ -1,62 +1,89 @@
 // Without Stack
 
-//Naive Implementation 
+//Intuitive implementation
 
 class Solution {
     public String removeOuterParentheses(String str) {
-        StringBuilder result = new StringBuilder();
-        boolean balanced = true;
+        // Stores the final string after removing outer parentheses
+        StringBuilder output = new StringBuilder();
+        /**
+         * Tracks the current balance of parentheses while traversing the string.
+         *
+         * '('  → increases the balance (opening a new parenthesis level)
+         * ')'  → decreases the balance (closing a parenthesis level)
+         */
         int balance = 0;
+
+        // Indicates whether we are currently at the start of a new primitive substring
+        boolean isBalanced = true;
 
         for (int i = 0; i < str.length(); i++) {
             char ch = str.charAt(i);
 
+            // Update balance based on the current parenthesis
             if (ch == '(') {
                 balance++;
-            } else { // if(str.charAt(i)==')')
+            } else {
                 balance--;
             }
 
-            if (balance == 1 && balanced) {
-                balanced = false;
+            /*
+             * If balance becomes 1 and we were previously balanced,
+             * this means we just encountered the outermost '('
+             * of a primitive substring → skip it.
+             */
+            if (balance == 1 && isBalanced) {
+                isBalanced = false;
                 continue;
             }
 
+            /*
+             * If balance becomes 0, the primitive substring has ended.
+             * This corresponds to the outermost ')' → skip it.
+             */
             if (balance == 0) {
-                balanced = true;
+                isBalanced = true;
                 continue;
             }
 
-            result.append(ch);
+            // Append only the inner parentheses
+            output.append(ch);
         }
 
-        return result.toString();
+        return output.toString();
     }
 }
+
 
 
 //Optimal Implementation 
 
 class Solution {
     public String removeOuterParentheses(String str) {
-        StringBuilder result = new StringBuilder();
+        StringBuilder output = new StringBuilder();
+
         int balance = 0;
 
-        for (char ch : str.toCharArray()) {
+        for (int i = 0; i < str.length(); i++) {
+            char ch = str.charAt(i);
+
+            // Opening parenthesis
             if (ch == '(') {
-                if (balance > 0) { // Add only if it's not the outermost '('
-                    result.append(ch);
-                }
                 balance++;
-            } else {
+                // Append only if it is NOT the outermost '('
+                if (balance != 1) {
+                    output.append(ch);
+                }
+            } else { // Closing parenthesis
                 balance--;
-                if (balance > 0) { // Add only if it's not the outermost ')'
-                    result.append(ch);
+                // Append only if it is NOT the outermost ')'
+                if (balance != 0) {
+                    output.append(ch);
                 }
             }
         }
 
-        return result.toString();
+        return output.toString();
     }
 }
 
@@ -64,53 +91,25 @@ class Solution {
 
 //With Stack
 
-//Naive Implementation 
-
 class Solution {
     public String removeOuterParentheses(String str) {
-        StringBuilder result = new StringBuilder();
-        Deque<Character> stack = new ArrayDeque<>();
-
-        for (char ch : str.toCharArray()) {
-            if (stack.isEmpty() && ch == '(') {
-                stack.push('(');
-            } else if (!stack.isEmpty() && ch == '(') {
-                stack.push(ch);
-                result.append(ch);
-            } else if (stack.size() > 1 && ch == ')') {
-                stack.pop();
-                result.append(ch);
-            } else if (stack.size() == 1 && ch == ')') {
-                stack.pop();
-            }
-        }
-
-        return result.toString();
-    }
-}
-
-
-//Optimal Implementation
-
-class Solution {
-    public String removeOuterParentheses(String str) {
-        StringBuilder result = new StringBuilder();
+        StringBuilder output = new StringBuilder();
         Deque<Character> stack = new ArrayDeque<>();
 
         for (char ch : str.toCharArray()) {
             if (ch == '(') {
                 if (!stack.isEmpty()) { // Only append if it's not the outermost '('
-                    result.append(ch);
+                    output.append(ch);
                 }
                 stack.push(ch);
             } else {
                 stack.pop();
                 if (!stack.isEmpty()) { // Only append if it's not the outermost ')'
-                    result.append(ch);
+                    output.append(ch);
                 }
             }
         }
 
-        return result.toString();
+        return output.toString();
     }
 }
