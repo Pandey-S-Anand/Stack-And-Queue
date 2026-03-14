@@ -1,21 +1,33 @@
 //Naive Approach (Using Stack)
 
 class Solution {
+    // Parentheses depth = maximum number of open parentheses at any point.
     public int maxDepth(String str) {
-        int maxDepth = 0;
+        // Stack to track open parentheses
         Deque<Character> stack = new ArrayDeque<>();
 
+        // Variable to store the maximum nesting depth
+        int maxNestingDepth = 0;
+
+        // Traverse the entire string
         for (int i = 0; i < str.length(); i++) {
             char ch = str.charAt(i);
+
+            // If we encounter an opening parenthesis
             if (ch == '(') {
+                // Push it into the stack
                 stack.push(ch);
-                maxDepth = Math.max(maxDepth, stack.size());
+
+                // Current nesting depth = stack size, Update the maximum depth if needed
+                maxNestingDepth = Math.max(maxNestingDepth, stack.size());
             } else if (ch == ')') {
+                // If we encounter a closing parenthesis, Pop the matching opening parenthesis
                 stack.pop();
             }
         }
 
-        return maxDepth;
+        // Return the maximum nesting depth encountered
+        return maxNestingDepth;
     }
 }
 
@@ -24,18 +36,27 @@ class Solution {
 
 class Solution {
     public int maxDepth(String str) {
-        int maxDepth = 0, currentDepth = 0;
+        // Stores the maximum nesting depth encountered in the string
+        int maxNestingDepth = 0;
 
+        // Tracks the current number of open parentheses
+        int currentNestingDepth = 0;
+
+        // Traverse each character of the string
         for (int i = 0; i < str.length(); i++) {
             char ch = str.charAt(i);
+
+            // If we encounter an opening parenthesis, increase the current nesting depth
             if (ch == '(') {
-                currentDepth++;
-                maxDepth = Math.max(maxDepth, currentDepth);
-            } else if (ch == ')') {
-                currentDepth--;
+                currentNestingDepth++;
+                // Update the maximum depth if current depth exceeds it
+                maxNestingDepth = Math.max(maxNestingDepth, currentNestingDepth);
+            } else if (ch == ')') { // If we encounter a closing parenthesis,  decrease the current nesting depth
+                currentNestingDepth--;
             }
         }
 
-        return maxDepth;
+        // Return the maximum nesting depth found
+        return maxNestingDepth;
     }
 }
