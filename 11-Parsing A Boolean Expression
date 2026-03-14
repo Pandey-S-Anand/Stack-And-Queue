@@ -1,5 +1,3 @@
-//Using Stack
-
 //Intuitive implementation
 
 class Solution {
@@ -78,6 +76,7 @@ class Solution {
 }
 
 
+
 //Optimal Implementation
 
 class Solution {
@@ -85,19 +84,25 @@ class Solution {
         Deque<Character> stack = new ArrayDeque<>();
 
         for (int i = 0; i < expression.length(); i++) {
-            char currentChar = expression.charAt(i);
+            char ch = expression.charAt(i);
 
-            if (currentChar != ')' && currentChar != ',') {
-                stack.push(currentChar);
-            } else if (currentChar == ')') {
-                boolean hasTrue = false, hasFalse = false;
+            if (ch == ',') {
+                continue;
+            }
+
+            if (ch != ')') {
+                stack.push(ch);
+            } else {
+                // Track whether the operands contain true or false
+                boolean hasTrue = false;
+                boolean hasFalse = false;
 
                 while (stack.peek() != '(') {
                     char operand = stack.pop();
+
                     if (operand == 't') {
                         hasTrue = true;
-                    }
-                    if (operand == 'f') {
+                    } else if (operand == 'f') {
                         hasFalse = true;
                     }
                 }
@@ -106,7 +111,7 @@ class Solution {
 
                 char operator = stack.pop();
 
-                char result = evaluateExpression(operator, hasTrue, hasFalse);
+                char result = evaluateExpression(hasTrue, hasFalse, operator);
 
                 stack.push(result);
             }
@@ -115,15 +120,32 @@ class Solution {
         return stack.peek() == 't';
     }
 
-    private char evaluateExpression(char operator, boolean hasTrue, boolean hasFalse) {
+
+    /**
+     * Evaluates the boolean subexpression based on the operator.
+     *
+     * hasTrue  → whether at least one operand was 't'
+     * hasFalse → whether at least one operand was 'f'
+     */
+    private char evaluateExpression(boolean hasTrue, boolean hasFalse, char operator) {
+
         switch (operator) {
+            // OR: true if any operand is true
             case '|':
                 return hasTrue ? 't' : 'f';
 
+            // AND: false if any operand is false
             case '&':
                 return hasFalse ? 'f' : 't';
 
-            default:
+            /*
+             * NOT operator is unary in the expression grammar,
+             * meaning it always has exactly one operand.
+             *
+             * If the operand was true → result becomes false
+             * If the operand was false → result becomes true
+             */
+            default: // '!'
                 return hasTrue ? 'f' : 't';
         }
     }
