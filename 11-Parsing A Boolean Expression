@@ -1,31 +1,40 @@
 //Using Stack
 
-//Naive Implementation
+//Intuitive implementation
 
 class Solution {
     public boolean parseBoolExpr(String expression) {
-        // Stack to hold characters during parsing
+        // Stack used to process the boolean expression
         Deque<Character> stack = new ArrayDeque<>();
 
-        // Traverse each character in the input expression
+        // Traverse the entire expression
         for (int i = 0; i < expression.length(); i++) {
-            char currentChar = expression.charAt(i);
+            char ch = expression.charAt(i);
 
-            // Push all characters except ')' and ',' directly onto the stack
-            if (currentChar != ')' && currentChar != ',') {
-                stack.push(currentChar);
-            } else if (currentChar == ')') { // If ')' is encountered, it indicates the end of a subexpression
-                // List to collect all operands of the subexpression
+            // Commas are just separators between operands, ignore them
+            if (ch == ',') {
+                continue;
+            }
+
+            /**
+             * Push the current character to the stack if it is not ')'.
+             * Includes operators ('&', '|', '!'), operands ('t', 'f'), and '('.
+             */
+            if (ch != ')') {
+                stack.push(ch);
+            } else if (ch == ')') { // If ')' is encountered, it indicates the end of a subexpression
+                // List to collect all operands inside the current subexpression
                 List<Character> operands = new ArrayList<>();
 
-                // Pop elements from the stack until '(' is found
+                // Extract all operands of the current subexpression by popping elements until '(' is encountered
                 while (stack.peek() != '(') {
                     operands.add(stack.pop());
                 }
 
-                // Pop the opening parenthesis '('
+                // Remove '(' from the stack
                 stack.pop();
-                // Pop the operator that precedes the '('
+
+                // The operator ('!', '&', '|') will be just before '('
                 char operator = stack.pop();
 
                 // Evaluate the subexpression using the operands and operator
@@ -44,27 +53,30 @@ class Solution {
         switch (operator) {
             case '|': // Logical OR
                 // Return 't' if any operand is 't', otherwise return 'f'
-                for (char operand : operands) {
-                    if (operand == 't') {
+                for (char ch : operands) {
+                    if (ch == 't') {
                         return 't';
                     }
                 }
+
                 return 'f';
 
             case '&': // Logical AND
                 // Return 'f' if any operand is 'f', otherwise return 't'
-                for (char operand : operands) {
-                    if (operand == 'f') {
+                for (char ch : operands) {
+                    if (ch == 'f') {
                         return 'f';
                     }
                 }
+
                 return 't';
 
             default: // case '!': Logical NOT (expects exactly one operand)
-                return operands.get(0) == 'f' ? 't' : 'f'; // Invert the single operand and return the result
+                return operands.get(0) == 'f' ? 't' : 'f';
         }
     }
 }
+
 
 //Optimal Implementation
 
