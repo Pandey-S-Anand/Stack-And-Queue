@@ -2,44 +2,126 @@
 
 class Solution {
     public ArrayList<Integer> nextLargerElement(int[] arr) {
-        ArrayList<Integer> nextLargerElement = new ArrayList<>();
+        // Stores the next greater element for each position
+        ArrayList<Integer> nextGreaterElements = new ArrayList<>();
 
+        // For every element in the array, compute its next greater element
         for (int i = 0; i < arr.length; i++) {
-            nextLargerElement.add(nextLargerElement(arr, i));
+            nextGreaterElements.add(nextLargerElement(arr, i));
         }
 
-        return nextLargerElement;
+        return nextGreaterElements;
     }
 
+    /**
+     * Finds the next greater element for arr[index]
+     * by scanning the array to the right.
+     *
+     * Returns the first element greater than arr[index].
+     * If none exists, returns -1.
+     */
     private int nextLargerElement(int[] arr, int index) {
+
+        // Scan all elements to the right of the current index
         for (int i = index + 1; i < arr.length; i++) {
+
+            // First greater element found
             if (arr[i] > arr[index]) {
                 return arr[i];
             }
         }
 
+        // No greater element exists on the right
         return -1;
     }
 }
 
 
+
 //Optimal Approach (Monotonically decreasing stack)
 
 class Solution {
+    /**
+    * Assumption:
+    *
+    * => All integers in arr are unique.
+    *
+    *    If duplicates were allowed in arr, storing only the values
+    *    in the stack could lead to ambiguity. In such cases we would
+    *    store indices instead of values so that each occurrence of
+    *    an element can be distinguished.
+    *
+    *
+    * Monotonic Stack Approach
+    *
+    * Key Observation:
+    * The next greater element for any number always lies on its right side.
+    * Therefore, we traverse the array from right → left.
+    *
+    *
+    * Why traverse from the back?
+    *
+    * When processing arr[i], all elements to its right have already
+    * been processed and considered as potential candidates.
+    * These candidates are maintained in the stack.
+    *
+    *
+    * The stack is maintained as a monotonic decreasing stack.
+    *
+    * This means the elements decrease from bottom → top.
+    * Larger elements remain deeper in the stack, while smaller
+    * elements stay closer to the top.
+    *
+    * The top of the stack therefore always represents the nearest
+    * greater candidate for the current element.
+    */
     public ArrayList<Integer> nextLargerElement(int[] arr) {
+        //Monotonic decreasing stack maintains potential next greater candidates
         Deque<Integer> stack = new ArrayDeque<>();
-        ArrayList<Integer> nextLargerElement = new ArrayList<>();
 
+        // Array to store the next greater element for each index
+        int[] nextGreaterElements = new int[arr.length];
+
+        // Traverse the array from right to left
         for (int i = arr.length - 1; i >= 0; i--) {
+
+            /**
+             * Remove all elements from the stack that are
+             * smaller than or equal to arr[i].
+             *
+             * Reason:
+             * Such elements cannot be the next greater element
+             * for arr[i] or for any element further to the left.
+             */
             while (!stack.isEmpty() && stack.peek() <= arr[i]) {
                 stack.pop();
             }
 
-            nextLargerElement.add(stack.isEmpty() ? -1 : stack.peek());
+            /**
+             * If the stack becomes empty, no greater element exists
+             * to the right of arr[i].
+             */
+            if (stack.isEmpty()) {
+                nextGreaterElements[i] = -1;
+            } else {
+                /**
+                 * The top of the stack represents the nearest
+                 * greater element on the right.
+                 */
+                nextGreaterElements[i] = stack.peek();
+            }
+
+            // Push current element so it can act as a candidate for elements located to its left
             stack.push(arr[i]);
         }
 
-        Collections.reverse(nextLargerElement);
-        return nextLargerElement;
+        // Convert the result array into an ArrayList as required by the function signature
+        ArrayList<Integer> result = new ArrayList<>();
+
+        for (int value : nextGreaterElements) {
+            result.add(value);
+        }
+
+        return result;
     }
 }
