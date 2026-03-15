@@ -102,9 +102,15 @@ class Solution {
      * been processed and stored in the stack. This allows the stack
      * to maintain potential "next greater candidates".
      *
-     * The stack is maintained as a monotonic decreasing stack,
-     * meaning values decrease from top to bottom (the top holds the
-     * largest candidate while smaller values lie below it).
+     *
+     * The stack is maintained as a monotonic decreasing stack.
+     *
+     * This means elements decrease from bottom to top.
+     * The largest elements remain deeper in the stack,
+     * while smaller elements stay closer to the top.
+     *
+     * The top of the stack always represents the nearest
+     * greater candidate for the current element.
      */
     public int[] nextGreaterElement(int[] arr1, int[] arr2) {
         // Map storing next greater element for each value in arr2
