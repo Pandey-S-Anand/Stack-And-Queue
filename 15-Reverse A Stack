@@ -1,68 +1,96 @@
-//Iterative Approach
+//Using explicit stack
 
 public class Solution {
     public static void reverseStack(Stack<Integer> stack) {
-        List<Integer> reverseStack = new ArrayList<>();
+        // Temporary list used to store stack elements
+        List<Integer> elements = new ArrayList<>();
 
+        /**
+         * Remove all elements from the stack and store them in the list
+         *
+         * Since stack is LIFO, pushing elements back in the same order
+         * effectively reverses the original stack.
+         */
         while (!stack.isEmpty()) {
-            reverseStack.add(stack.pop());
+            elements.add(stack.pop());
         }
 
-        for (int num : reverseStack) {
-            stack.push(num);
+        // Push elements back to the stack
+        for (int element : elements) {
+            stack.push(element);
         }
     }
 }
 
 
-
-//Recursive Approach
-
-//Using Extra Space
+//Using implicit stack
 
 public class Solution {
+    /**
+     * Reverses the given stack using recursion.
+     *
+     * Idea:
+     * Recursively remove the top element of the stack until it becomes empty.
+     * Once the stack is empty, start inserting the removed elements
+     * back at the bottom of the stack.
+     *
+     * This effectively reverses the order of elements in the stack.
+     *
+     * Example:
+     *
+     * Initial Stack
+     *
+     *      4
+     *      3
+     *      2
+     *      1
+     *
+     * After reverseStack():
+     *
+     *      1
+     *      2
+     *      3
+     *      4
+     *
+     */
     public static void reverseStack(Stack<Integer> stack) {
+        // Base case: if stack is empty, nothing to reverse
         if (stack.isEmpty()) {
             return;
         }
 
+        // Remove the top element
         int topElement = stack.pop();
+
+        // Recursively reverse the remaining stack
         reverseStack(stack);
 
-        Deque<Integer> temporaryStack = new ArrayDeque<>();
-        while (!stack.isEmpty()) {
-            temporaryStack.push(stack.pop());
-        }
-
-        stack.push(topElement);
-        while (!temporaryStack.isEmpty()) {
-            stack.push(temporaryStack.pop());
-        }
-    }
-}
-
-
-//Without Extra Space
-
-public class Solution {
-    public static void reverseStack(Stack<Integer> stack) {
-        if (stack.isEmpty()) {
-            return;
-        }
-
-        int topElement = stack.pop();
-        reverse(stack);
+        // Insert the removed element at the bottom
         insertAtBottom(stack, topElement);
     }
 
+
+    /**
+     * Inserts an element at the bottom of the stack using recursion.
+     *
+     * Idea:
+     * Recursively remove elements until the stack becomes empty.
+     * Insert the element at the bottom and then restore the removed elements.
+     */
     private static void insertAtBottom(Stack<Integer> stack, int element) {
+        // Base case: if stack is empty, insert the element
         if (stack.isEmpty()) {
             stack.push(element);
             return;
         }
 
+        // Temporarily remove the top element
         int topElement = stack.pop();
+
+        // Recursively insert the element at the bottom
         insertAtBottom(stack, element);
+
+        // Restore the removed element
         stack.push(topElement);
     }
 }
