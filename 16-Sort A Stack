@@ -1,84 +1,268 @@
-//Iterative Approach
+//Bruteforce approach
+
+class Solution {
+    public void sortStack(Stack<Integer> stack) {
+        /**
+         * Pops all elements from the stack, stores them in an array,
+         * and sorts the array.
+         */
+        int[] sortedValues = extractAndSort(stack);
+
+        // Push sorted elements back into the stack
+        for (int value : sortedValues) {
+            stack.push(value);
+        }
+    }
+
+    private int[] extractAndSort(Stack<Integer> stack) {
+        int[] values = new int[stack.size()];
+        int index = 0;
+
+        // Transfer stack elements into array
+        while (!stack.isEmpty()) {
+            values[index++] = stack.pop();
+        }
+
+        // Sort the array
+        Arrays.sort(values);
+
+        return values;
+    }
+}
+
+
+//Better Approach
 
 //Naive Implementation
 
-class GfG {
-    public Stack<Integer> sort(Stack<Integer> stack) {
+class Solution {
+    /**
+     * Sorts a stack using an auxiliary stack.
+     *
+     * Idea:
+     * We maintain an auxiliary stack that always remains sorted.
+     *
+     * Steps:
+     * 1. Pop elements from the original stack one by one.
+     * 2. Insert them into the correct position in the auxiliary stack.
+     * 3. If the top of the auxiliary stack is greater than the current element,
+     *    move those elements back to the original stack temporarily.
+     * 4. Insert the current element into the correct position.
+     *
+     * Important Note:
+     * Why we do not use an additional temporary list:
+     *
+     * One possible approach could have been to store all elements that are
+     * popped from the auxiliary stack (which were already sorted) into a
+     * temporary list. After inserting the current element at the correct
+     * position in the auxiliary stack, we could then push all elements from
+     * the temporary list back onto the auxiliary stack.
+     *
+     * While this approach would work correctly, it introduces an additional
+     * data structure which is unnecessary.
+     *
+     * Since the original stack is unsorted anyway, moving elements back to it
+     * temporarily does not affect correctness. This keeps the solution purely
+     * stack-based and avoids introducing extra data structures.
+     *
+     * After constructing the sorted auxiliary stack, we reverse it so that
+     * the smallest element appears at the bottom and the largest element
+     * appears at the top.
+     *
+     * The elements are then pushed back into the original stack, resulting
+     * in the original stack being sorted with the smallest element at the
+     * bottom and the largest element at the top.
+     *
+     * Example:
+     *
+     * Original stack (top → bottom)
+     *      3
+     *      1
+     *      4
+     *      2
+     *
+     * Sorted auxiliary stack (largest at the top)
+     *      4
+     *      3
+     *      2
+     *      1
+     *
+     * After reversing the auxiliary stack
+     *      1
+     *      2
+     *      3
+     *      4
+     *
+     * After repopulating the original stack
+     *      4
+     *      3
+     *      2
+     *      1
+     */
+    public void sortStack(Stack<Integer> stack) {
+        // Auxiliary stack used to maintain elements in sorted order
         Stack<Integer> auxStack = new Stack<>();
-        auxStack.push(stack.pop());
 
+        // Process each element from the original stack
         while (!stack.isEmpty()) {
             int topElement = stack.pop();
 
-            if (topElement > auxStack.peek()) {
+            // If auxStack is empty or topElement is greater than the top of auxStack, it can be directly placed there
+            if (auxStack.isEmpty() || auxStack.peek() <= topElement) {
                 auxStack.push(topElement);
             } else {
-                while (!auxStack.isEmpty() && topElement < auxStack.peek()) {
+                /**
+                 * Move elements back to the original stack
+                 * until we find the correct position for topElement.
+                 *
+                 * The original stack acts as temporary storage here,
+                 * eliminating the need for a separate list or array.
+                 */
+                while (!auxStack.isEmpty() && auxStack.peek() > topElement) {
                     stack.push(auxStack.pop());
                 }
+
                 auxStack.push(topElement);
             }
         }
+        /**
+         * At this point, auxStack is sorted with the largest element at the top
+         * and the smallest at the bottom. Since a stack follows the LIFO principle,
+         * we reverse it so that when elements are pushed back into the original
+         * stack, the final order becomes correct (smallest at the bottom and
+         * largest at the top).
+         */
+        reverseStack(auxStack);
 
-        return auxStack;
-    }
-}
-
-
-
-//Optimal Implementation
-
-class GfG {
-    public Stack<Integer> sort(Stack<Integer> stack) {
-        Stack<Integer> auxStack = new Stack<>();
-
-        while (!stack.isEmpty()) {
-            int topElement = stack.pop();
-
-            while (!auxStack.isEmpty() && topElement < auxStack.peek()) {
-                stack.push(auxStack.pop());
-            }
-
-            auxStack.push(topElement);
+        // Move elements back to the original stack
+        while (!auxStack.isEmpty()) {
+            stack.push(auxStack.pop());
         }
-
-        return auxStack;
-    }
-}
-
-
-
-//Recursive Approach
-
-
-class GfG {
-    public Stack<Integer> sort(Stack<Integer> stack) {
-        sortStack(stack);
-        return stack;
     }
 
-    private void sortStack(Stack<Integer> stack) {
+    private void reverseStack(Stack<Integer> stack) {
         if (stack.isEmpty()) {
             return;
         }
 
         int topElement = stack.pop();
 
-        sortStack(stack);
+        reverseStack(stack);
 
-        insertInSortedOrder(stack, topElement);
+        insertAtBottom(stack, topElement);
     }
 
-    private void insertInSortedOrder(Stack<Integer> stack, int element) {
-        if (stack.isEmpty() || element > stack.peek()) {
+    private void insertAtBottom(Stack<Integer> stack, int element) {
+
+        if (stack.isEmpty()) {
             stack.push(element);
             return;
         }
 
-        int top = stack.pop();
+        int topElement = stack.pop();
 
+        insertAtBottom(stack, element);
+
+        stack.push(topElement);
+    }
+}
+
+
+//Concise Implementation
+
+class Solution {
+    public void sortStack(Stack<Integer> stack) {
+        Stack<Integer> auxStack = new Stack<>();
+
+        while (!stack.isEmpty()) {
+            int topElement = stack.pop();
+
+            while (!auxStack.isEmpty() && auxStack.peek() > topElement) {
+                stack.push(auxStack.pop());
+            }
+
+            auxStack.push(topElement);
+        }
+
+        reverseStack(auxStack);
+
+        while (!auxStack.isEmpty()) {
+            stack.push(auxStack.pop());
+        }
+    }
+
+    private void reverseStack(Stack<Integer> stack) {
+        if (stack.isEmpty()) {
+            return;
+        }
+
+        int topElement = stack.pop();
+
+        reverseStack(stack);
+
+        insertAtBottom(stack, topElement);
+    }
+
+    private void insertAtBottom(Stack<Integer> stack, int element) {
+        if (stack.isEmpty()) {
+            stack.push(element);
+            return;
+        }
+
+        int topElement = stack.pop();
+
+        insertAtBottom(stack, element);
+
+        stack.push(topElement);
+    }
+}
+
+
+
+//Optimal approach
+
+class Solution {
+    public void sortStack(Stack<Integer> stack) {
+        // Base case: if stack is empty, nothing to sort
+        if (stack.isEmpty()) {
+            return;
+        }
+
+        // Remove the top element
+        int topElement = stack.pop();
+
+        // Recursively sort the remaining stack
+        sortStack(stack);
+
+        // Insert the removed element into its correct sorted position
+        insertInSortedOrder(stack, topElement);
+    }
+
+
+    /**
+     * Inserts an element into a stack that is already sorted.
+     *
+     * The function places the element in its correct position
+     * while maintaining the sorted order of the stack.
+     *
+     * If the element is greater than or equal to the current top,
+     * it can be pushed directly. Otherwise, elements are popped
+     * temporarily until the correct position is found.
+     */
+    private void insertInSortedOrder(Stack<Integer> stack, int element) {
+        // Base case: correct position found
+        if (stack.isEmpty() || element >= stack.peek()) {
+            stack.push(element);
+            return;
+        }
+
+        // Temporarily remove the top element
+        int topElement = stack.pop();
+
+        // Recursively find the correct position
         insertInSortedOrder(stack, element);
 
-        stack.push(top);
+        // Restore the removed element
+        stack.push(topElement);
     }
 }
