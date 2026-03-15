@@ -1,15 +1,19 @@
-//Using Extra Space
+//Using explicit stack (iterative approach)
 
 public class Solution {
     public static Stack<Integer> pushAtBottom(Stack<Integer> stack, int x) {
-        Deque<Integer> auxStack = new ArrayDeque<>();
+        // Temporary stack used to reverse the order of elements
+        Stack<Integer> auxStack = new Stack<>();
 
+        // Move all elements from original stack to auxiliary stack
         while (!stack.isEmpty()) {
             auxStack.push(stack.pop());
         }
 
+        // Insert the new element at the bottom
         stack.push(x);
 
+        // Restore the original elements back on top of the new element
         while (!auxStack.isEmpty()) {
             stack.push(auxStack.pop());
         }
@@ -19,22 +23,25 @@ public class Solution {
 }
 
 
-//Using Constant Space
+//Using implicit stack (recursive approach)
 
 public class Solution {
-    public static Stack<Integer> pushAtBottom(Stack<Integer> stack, int x) {
-        insertAtBottom(stack, x);
-        return stack;
-    }
-
-    private static void insertAtBottom(Stack<Integer> stack, int x) {
+    public static Stack<Integer> pushAtBottom(Stack<Integer> stack, int value) {
+        // Base case: if stack becomes empty, insert the element
         if (stack.isEmpty()) {
-            stack.push(x);
-            return;
+            stack.push(value);
+            return stack;
         }
 
-        int temp = stack.pop();
-        insertAtBottom(stack, x);
-        stack.push(temp);
+        // Remove the top element temporarily
+        int topElement = stack.pop();
+
+        // Recursively insert the element at the bottom
+        pushAtBottom(stack, value);
+
+        // Restore the removed element
+        stack.push(topElement);
+
+        return stack;
     }
 }
