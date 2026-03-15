@@ -1,54 +1,148 @@
 //Bruteforce Approach
 
 class Solution {
-    public int[] nextGreaterElement(int[] subset, int[] arr) {
+    public int[] nextGreaterElement(int[] arr1, int[] arr2) {
+        // Map to store next greater element for each value in arr2
         Map<Integer, Integer> nextGreaterMap = new HashMap<>();
 
-        for (int i = 0; i < arr.length; i++) {
-            nextGreaterMap.put(arr[i], nextGreaterValue(i, arr));
+        // Precompute next greater element for every element in arr2
+        for (int i = 0; i < arr2.length; i++) {
+            nextGreaterMap.put(arr2[i], findNextGreaterToRight(arr2, i));
         }
 
-        int[] nextGreaterValue = new int[subset.length];
-        for (int i = 0; i < subset.length; i++) {
-            nextGreaterValue[i] = nextGreaterMap.get(subset[i]);
+        // Replace elements in arr1 using the precomputed map
+        for (int i = 0; i < arr1.length; i++) {
+            arr1[i] = nextGreaterMap.get(arr1[i]);
         }
 
-        return nextGreaterValue;
+        return arr1;
     }
 
-    private int nextGreaterValue(int index, int[] arr) {
+    /**
+     * Finds the next greater element for arr[index]
+     * by scanning the array to the right.
+     *
+     * Returns the first element greater than arr[index].
+     * If none exists, returns -1.
+     */
+    private int findNextGreaterToRight(int[] arr, int index) {
+        // Scan elements to the right of the current index
         for (int i = index + 1; i < arr.length; i++) {
+            // First greater element found
             if (arr[i] > arr[index]) {
                 return arr[i];
             }
         }
 
+        // No greater element exists
         return -1;
     }
 }
 
 
+
 //Optimal Approach (Monotonically decreasing stack)
 
 class Solution {
-    public int[] nextGreaterElement(int[] subset, int[] arr) {
-        Deque<Integer> stack = new ArrayDeque<>();
+    /**
+     * Important Constraints:
+     *
+     * 1. All integers in nums1 and nums2 are unique.
+     *
+     *    If duplicates were allowed in nums2, mapping a value directly to its
+     *    next greater element would become ambiguous because the same value
+     *    could appear at multiple indices and each occurrence might have a
+     *    different next greater element.
+     *
+     *    Example:
+     *        nums2 = [2, 5, 2, 3]
+     *
+     *        index 0 → 2 → next greater = 5
+     *        index 2 → 2 → next greater = 3
+     *
+     *    If we tried to store this in a map:
+     *
+     *        2 → ?
+     *
+     *    It becomes unclear whether the next greater element of 2 should be
+     *    5 or 3. Because of this ambiguity, the problem guarantees that all
+     *    values in nums2 are unique, allowing us to safely map:
+     *
+     *        value → next greater element
+     *
+     *
+     * 2. All integers of nums1 also appear in nums2.
+     *
+     *    → This guarantees that every element we want to query (from nums1)
+     *      will always exist in nums2.
+     *
+     *    → Therefore, when we do:
+     *        nextGreaterMap.get(arr1[i])
+     *      we are guaranteed that the key will exist in the map.
+     *
+     *
+     * Monotonic Stack Approach
+     *
+     * Idea:
+     * We first compute the Next Greater Element for every value in arr2
+     * and store the result in a map.
+     *
+     * After that, we simply replace each element in arr1 with its
+     * corresponding next greater value from the map.
+     *
+     *
+     * Key Observation:
+     * The next greater element for any number lies on its right side.
+     * Therefore, we traverse arr2 from right → left.
+     *
+     *
+     * Why traverse from the back?
+     *
+     * When processing arr2[i], all elements to its right have already
+     * been processed and stored in the stack. This allows the stack
+     * to maintain potential "next greater candidates".
+     *
+     * The stack is maintained as a monotonic decreasing stack,
+     * meaning values decrease from top to bottom (the top holds the
+     * largest candidate while smaller values lie below it).
+     */
+    public int[] nextGreaterElement(int[] arr1, int[] arr2) {
+        // Map storing next greater element for each value in arr2
         Map<Integer, Integer> nextGreaterMap = new HashMap<>();
-        int[] nextGreaterValue = new int[subset.length];
 
-        for (int i = arr.length - 1; i >= 0; i--) {
-            while (!stack.isEmpty() && stack.peek() <= arr[i]) {
+        // Monotonic decreasing stack
+        Deque<Integer> stack = new ArrayDeque<>();
+
+        // Traverse arr2 from right to left
+        for (int i = arr2.length - 1; i >= 0; i--) {
+            /*
+             * Remove all elements smaller than or equal to arr2[i]
+             * because they cannot be the next greater element.
+             */
+            while (!stack.isEmpty() && stack.peek() <= arr2[i]) {
                 stack.pop();
             }
 
-            nextGreaterMap.put(arr[i], stack.isEmpty() ? -1 : stack.peek());
-            stack.push(arr[i]);
+            /*
+             * If stack becomes empty, no greater element exists
+             * to the right.
+             */
+            if (stack.isEmpty()) {
+                nextGreaterMap.put(arr2[i], -1);
+            } else {
+                // The top of the stack is the next greater element
+                nextGreaterMap.put(arr2[i], stack.peek());
+            }
+
+            // Push current element as a candidate for future elements
+            stack.push(arr2[i]);
         }
 
-        for (int i = 0; i < subset.length; i++) {
-            nextGreaterValue[i] = nextGreaterMap.get(subset[i]);
+        // Replace arr1 elements using the precomputed map
+        for (int i = 0; i < arr1.length; i++) {
+            arr1[i] = nextGreaterMap.get(arr1[i]);
         }
 
-        return nextGreaterValue;
+        return arr1;
     }
 }
