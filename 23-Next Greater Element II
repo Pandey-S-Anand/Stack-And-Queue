@@ -1,80 +1,132 @@
 //Bruteforce Approach
 
-//Naive Implementation
-
 class Solution {
     public int[] nextGreaterElements(int[] arr) {
-        int[] nextGreaterElements = new int[arr.length];
+        // Array to store the next greater element for each position
+        int[] nextLargerElements = new int[arr.length];
 
+        // Compute next greater element for every index
         for (int i = 0; i < arr.length; i++) {
-            nextGreaterElements[i] = nextGreaterElement(arr, i);
+            nextLargerElements[i] = findNextGreaterElement(arr, i);
         }
 
-        return nextGreaterElements;
+        return nextLargerElements;
     }
 
-    private int nextGreaterElement(int[] arr, int index) {
+    /**
+     * Finds the next greater element for arr[index].
+     *
+     * Step 1:
+     * Search the elements to the right of the current index.
+     *
+     * Step 2:
+     * If no greater element is found, simulate the circular
+     * nature of the array by searching from the beginning
+     * of the array up to the current index.
+     *
+     * If no greater element exists in the entire array,
+     * return -1.
+     */
+    private int findNextGreaterElement(int[] arr, int index) {
+        // Search the right side of the array
         for (int i = index + 1; i < arr.length; i++) {
             if (arr[i] > arr[index]) {
                 return arr[i];
             }
         }
 
+        // Simulate circular traversal: search from start to current index
         for (int i = 0; i < index; i++) {
             if (arr[i] > arr[index]) {
                 return arr[i];
             }
         }
 
+        // No greater element exists
         return -1;
     }
 }
 
-
-//Optimal Implementation
-
-class Solution {
-    public int[] nextGreaterElements(int[] arr) {
-        int[] nextGreaterElements = new int[arr.length];
-
-        for (int i = 0; i < arr.length; i++) {
-            nextGreaterElements[i] = nextGreaterElement(arr, i);
-        }
-
-        return nextGreaterElements;
-    }
-
-    private int nextGreaterElement(int[] arr, int index) {
-        for (int i = 0; i < arr.length; i++) {
-            int nextIndex = (index + 1 + i) % arr.length;
-            if (arr[nextIndex] > arr[index]) {
-                return arr[nextIndex];
-            }
-        }
-        return -1;
-    }
-}
 
 
 //Optimal Approach (Monotonically decreasing stack)
 
 class Solution {
     public int[] nextGreaterElements(int[] arr) {
+        /*
+         * We store indices in the stack instead of values.
+         *
+         * Reason:
+         * The array may contain duplicate elements. If values were stored,
+         * two identical values at different positions could not be distinguished.
+         * By storing indices we can always retrieve the corresponding value
+         * using arr[index].
+         *
+         * Stack Property:
+         * The stack is maintained as a monotonic decreasing stack
+         * (with respect to array values).
+         *
+         * Values decrease from bottom → top,
+         * meaning the largest element stays deeper in the stack
+         * while smaller elements remain closer to the top.
+         */
         Deque<Integer> stack = new ArrayDeque<>();
-        int[] nextGreaterElements = new int[arr.length];
 
-        for (int i = (2 * arr.length) - 1; i >= 0; i--) {
-            while (!stack.isEmpty() && stack.peek() <= arr[i % arr.length]) {
+        // First pass: prepare stack with potential NGE candidates
+        for (int i = arr.length - 1; i >= 0; i--) {
+
+            while (!stack.isEmpty() && arr[stack.peek()] <= arr[i]) {
                 stack.pop();
             }
 
-            if (i < arr.length) {
-                nextGreaterElements[i] = stack.isEmpty() ? -1 : stack.peek();
-            }
-
-            stack.push(arr[i % arr.length]);
+            stack.push(i);
         }
 
-        return nextGreaterElements;
+        /*
+        * After the first normal pass (right → left traversal),
+        * the stack contains elements that can act as potential
+        * Next Greater Element (NGE) candidates for elements
+        * located to their left.
+        *
+        * In a non-circular array, once we reach index 0, there are
+        * no more elements on the left to process. Therefore, the
+        * algorithm stops after this pass.
+        *
+        * However, in a circular array, the array conceptually wraps
+        * around. This means the last element (at index n - 1) is
+        * considered adjacent to the first element (index 0).
+        *
+        * Because of this wrap-around property, the elements that
+        * remain in the stack after the first pass may still serve
+        * as valid NGE candidates for elements near the end of the
+        * array (which can now look towards the beginning of the
+        * array for their next greater element).
+        *
+        * To simulate this circular behavior, we perform a second
+        * pass over the array. During this pass, the remaining stack
+        * elements are used as potential NGE candidates for those
+        * elements whose next greater value lies in the wrapped
+        * portion of the array.
+        */
+
+        int[] nextLargerElements = new int[arr.length];
+
+        // Second pass: compute the actual Next Greater Element
+        for (int i = arr.length - 1; i >= 0; i--) {
+
+            while (!stack.isEmpty() && arr[stack.peek()] <= arr[i]) {
+                stack.pop();
+            }
+
+            if (stack.isEmpty()) {
+                nextLargerElements[i] = -1;
+            } else {
+                nextLargerElements[i] = arr[stack.peek()];
+            }
+
+            stack.push(i);
+        }
+
+        return nextLargerElements;
     }
 }
