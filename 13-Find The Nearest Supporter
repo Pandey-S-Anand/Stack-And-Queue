@@ -1,21 +1,54 @@
 //Bruteforce Approach
 
 class Solution {
-    public static ArrayList<Integer> prevSmall(ArrayList<Integer> arr, int n) {
+    /**
+     * Brute Force Approach
+     *
+     * For every contestant at position i, we scan all contestants
+     * to the left (i-1 to 0) to find the closest supporter.
+     *
+     * A supporter is defined as a contestant whose rating
+     * is strictly smaller than the rating of the current contestant.
+     *
+     * The first such contestant encountered while scanning left
+     * will be the closest supporter.
+     *
+     * If no such contestant exists, we store -1.
+     *
+     * Example:
+     * ratings = [4, 5, 2, 10, 8]
+     *
+     * Output:
+     * [-1, 4, -1, 2, 2]
+     */
+    public static ArrayList<Integer> prevSmall(ArrayList<Integer> ratings, int n) {
+        // Stores the rating of the closest supporter on the left
         ArrayList<Integer> supporterRating = new ArrayList<>();
+
+        // First contestant has no one on the left
         supporterRating.add(-1);
 
+        // Traverse each contestant starting from index 1
         for (int i = 1; i < n; i++) {
-            boolean supporter = false;
+            // Flag to track whether a supporter was found
+            boolean supporterFound = false;
+
+            /**
+             * Scan all contestants to the left of the current contestant
+             * starting from the immediate left (i-1).
+             */
             for (int j = i - 1; j >= 0; j--) {
-                if (arr.get(j) < arr.get(i)) {
-                    supporterRating.add(arr.get(j));
-                    supporter = true;
+                // Check if this contestant can support the current one
+                if (ratings.get(j) < ratings.get(i)) {
+                    // Found the closest supporter
+                    supporterRating.add(ratings.get(j));
+                    supporterFound = true;
                     break;
                 }
             }
 
-            if (!supporter) {
+            // If no supporter was found on the left
+            if (!supporterFound) {
                 supporterRating.add(-1);
             }
         }
@@ -25,30 +58,86 @@ class Solution {
 }
 
 
+
 //Optimal Approach (Using Stack)
 
-class Solution {
-    public static ArrayList<Integer> prevSmall(ArrayList<Integer> arr, int n) {
-        ArrayDeque<Integer> stack = new ArrayDeque<>();
-        ArrayList<Integer> supporterRating = new ArrayList<>();
+/**
+ * Problem Explanation
+ *
+ * In this problem, each contestant is represented by an index `i`,
+ * and their rating is given by ratings[i].
+ *
+ * According to the problem statement:
+ * A contestant supports all contestants whose rating is greater than their own rating.
+ *
+ * For every contestant standing in the row, we need to determine the rating of the
+ * closest supporter on the left.
+ *
+ * If no such supporter exists, we store -1 for that contestant.
+ *
+ * Interpretation:
+ *
+ * For a contestant at position i with rating ratings[i],
+ * we examine contestants on the left side.
+ *
+ * A valid supporter must have a rating strictly smaller than ratings[i].
+ *
+ * Among all such supporters, we must find the one closest to the current contestant.
+ *
+ * This problem is equivalent to the classic
+ * "Previous Smaller Element" problem and can be solved efficiently
+ * using a Monotonic Stack.
+ *
+ * Example:
+ *
+ * ratings = [4, 5, 2, 10, 8]
+ *
+ * For each contestant:
+ *
+ * 4  ? no smaller element on the left ? -1
+ * 5  ? previous smaller = 4
+ * 2  ? no smaller element on the left ? -1
+ * 10 ? previous smaller = 2
+ * 8  ? previous smaller = 2
+ *
+ * Output:
+ * [-1, 4, -1, 2, 2]
+ */
+public class Solution {
+    public static ArrayList<Integer> prevSmall(ArrayList<Integer> ratings, int n) {
+        // Stores the closest smaller rating on the left for each contestant
+        ArrayList<Integer> previousSmallerRatings = new ArrayList<>();
 
-        stack.push(arr.get(0));
-        supporterRating.add(-1);
+        /**
+         * Monotonic Stack
+         *
+         * The stack stores ratings in increasing order.
+         * This helps efficiently determine the closest smaller element
+         * to the left of the current rating.
+         */
+        Deque<Integer> monotonicStack = new ArrayDeque<>();
 
-        for (int i = 1; i < n; i++) {
-            while (!stack.isEmpty() && stack.peek() >= arr.get(i)) {
-                stack.pop();
+        // Traverse the ratings from left to right
+        for (int currentRating : ratings) {
+            /**
+             * Remove elements from the stack that are greater than or equal
+             * to the current rating because they they cannot act as supporters.
+             */
+            while (!monotonicStack.isEmpty() && monotonicStack.peek() >= currentRating) {
+                monotonicStack.pop();
             }
 
-            if (stack.isEmpty()) {
-                supporterRating.add(-1);
-            } else {
-                supporterRating.add(stack.peek());
+            // If the stack is empty, no smaller rating exists on the left
+            if (monotonicStack.isEmpty()) {
+                previousSmallerRatings.add(-1);
+            } else { // Otherwise, the top of the stack is the closest smaller rating
+                previousSmallerRatings.add(monotonicStack.peek());
             }
 
-            stack.push(arr.get(i));
+            // Push current rating so it may act as supporter for future contestants
+            monotonicStack.push(currentRating);
         }
 
-        return supporterRating;
+        return previousSmallerRatings;
     }
 }
