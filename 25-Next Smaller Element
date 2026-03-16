@@ -2,45 +2,100 @@
 
 class Solution {
     public static int[] help_classmate(int arr[], int n) {
-        int[] nextSmallerElement = new int[n];
+        int[] nextSmallerElements = new int[n];
 
+        // For every element, find the next smaller element to its right
         for (int i = n - 1; i >= 0; i--) {
-            nextSmallerElement[i] = nextSmallerElement(arr, n, i);
+            nextSmallerElements[i] = findNextSmallerElement(arr, n, i);
         }
 
-        return nextSmallerElement;
+        return nextSmallerElements;
     }
 
-    private static int nextSmallerElement(int[] arr, int n, int index) {
+    /**
+     * Searches linearly to the right of the given index
+     * to find the first element smaller than arr[index].
+     *
+     * Returns:
+     * The first smaller element to the right if it exists,
+     * otherwise returns -1.
+     */
+    private static int findNextSmallerElement(int[] arr, int n, int index) {
+        // Scan elements to the right of the current index
         for (int i = index + 1; i < n; i++) {
+            // First smaller element found
             if (arr[i] < arr[index]) {
                 return arr[i];
             }
         }
 
+        // No smaller element exists to the right
         return -1;
     }
 }
 
 
-
 //Optimal Approach (Monotonically decreasing stack)
 
 class Solution {
+    /*
+     * Problem Interpretation
+     * ----------------------
+     * The roll number of each student corresponds to the index of the array,
+     * and arr[i] represents the chemistry marks obtained by the student
+     * with roll number i.
+     *
+     * Every student wants to help a classmate who:
+     * 1. Appears after them in the roll number sequence (j > i)
+     * 2. Has scored fewer marks than them (arr[j] < arr[i])
+     *
+     * Since students are lazy, they select the first such student
+     * appearing to their right.
+     *
+     * Therefore, the problem reduces to finding the
+     * "Next Smaller Element to the Right" for every element in the array.
+     *
+     *
+     * Algorithm Insight
+     * -----------------
+     * We traverse the array from right to left so that when we process
+     * arr[i], all elements to its right have already been considered
+     * and can serve as potential candidates for the next smaller element.
+     *
+     * These candidates are maintained using a stack.
+     *
+     *
+     * Stack Property
+     * --------------
+     * The stack is maintained as a monotonic increasing stack
+     * with respect to the array values.
+     *
+     * Values increase from bottom → top.
+     * Smaller values remain deeper in the stack, while larger values
+     * stay closer to the top.
+     *
+     * After removing all elements greater than or equal to arr[i],
+     * the element at the top of the stack represents the nearest
+     * smaller element to the right.
+     */
     public static int[] help_classmate(int arr[], int n) {
         Deque<Integer> stack = new ArrayDeque<>();
-        int[] nextSmallerElement = new int[n];
+        int[] nextSmallerElements = new int[n];
 
         for (int i = n - 1; i >= 0; i--) {
             while (!stack.isEmpty() && stack.peek() >= arr[i]) {
                 stack.pop();
             }
 
-            nextSmallerElement[i] = stack.isEmpty() ? -1 : stack.peek();
+            if (stack.isEmpty()) {
+                nextSmallerElements[i] = -1;
+            } else {
+                nextSmallerElements[i] = stack.peek();
+            }
 
             stack.push(arr[i]);
         }
 
-        return nextSmallerElement;
+        return nextSmallerElements;
     }
 }
