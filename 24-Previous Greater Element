@@ -30,15 +30,6 @@ class Solution {
 
 class Solution {
     /*
-     * We store indices in the stack instead of values.
-     *
-     * Reason:
-     * The array may contain duplicate elements. If only values were stored,
-     * two identical values appearing at different positions could not be
-     * distinguished. By storing indices, each occurrence is treated
-     * independently and the corresponding value can always be accessed
-     * using arr[index].
-     *
      * Why do we traverse from the front (left → right)?
      *
      * When processing arr[i], all elements to its left have already been
@@ -62,18 +53,18 @@ class Solution {
         ArrayList<Integer> prevGreaterElements = new ArrayList<>();
 
         for (int i = 0; i < arr.length; i++) {
-
-            while (!stack.isEmpty() && arr[stack.peek()] <= arr[i]) {
+            
+            while (!stack.isEmpty() && stack.peek() <= arr[i]) {
                 stack.pop();
             }
 
             if (stack.isEmpty()) {
                 prevGreaterElements.add(-1);
             } else {
-                prevGreaterElements.add(arr[stack.peek()]);
+                prevGreaterElements.add(stack.peek());
             }
 
-            stack.push(i);
+            stack.push(arr[i]);
         }
 
         return prevGreaterElements;
