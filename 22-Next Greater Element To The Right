@@ -42,15 +42,6 @@ class Solution {
 
 class Solution {
     /**
-    * Assumption:
-    *
-    * => All integers in arr are unique.
-    *
-    *    If duplicates were allowed in arr, storing only the values
-    *    in the stack could lead to ambiguity. In such cases we would
-    *    store indices instead of values so that each occurrence of
-    *    an element can be distinguished.
-    *
     *
     * Why traverse from the back?
     *
