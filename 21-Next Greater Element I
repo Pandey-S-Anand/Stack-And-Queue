@@ -81,20 +81,12 @@ class Solution {
      *      we are guaranteed that the key will exist in the map.
      *
      *
-     * Monotonic Stack Approach
-     *
      * Idea:
      * We first compute the Next Greater Element for every value in arr2
      * and store the result in a map.
      *
      * After that, we simply replace each element in arr1 with its
      * corresponding next greater value from the map.
-     *
-     *
-     * Key Observation:
-     * The next greater element for any number lies on its right side.
-     * Therefore, we traverse arr2 from right → left.
-     *
      *
      * Why traverse from the back?
      *
