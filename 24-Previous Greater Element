@@ -1,24 +1,27 @@
 //Bruteforce Approach
 
 class Solution {
-    public long[] previousGreater(long[] arr, int n) {
-        long[] previousGreaterElement = new long[n];
+    static ArrayList<Integer> preGreaterEle(int[] arr) {
+        ArrayList<Integer> prevGreaterElements = new ArrayList<>();
 
-        for (int i = 0; i < n; i++) {
-            previousGreaterElement[i] = previousGreater(arr, n, i);
+        // Compute previous greater element for every index
+        for (int i = 0; i < arr.length; i++) {
+            prevGreaterElements.add(findPrevGreater(arr, i));
         }
 
-        return previousGreaterElement;
+        return prevGreaterElements;
     }
 
-    private long previousGreater(long[] arr, int n, int index) {
+    // Searches the left side of arr[index] for the nearest greater element
+    private static int findPrevGreater(int[] arr, int index) {
         for (int i = index - 1; i >= 0; i--) {
             if (arr[i] > arr[index]) {
                 return arr[i];
             }
         }
 
-        return -1L;
+        // No greater element found on the left
+        return -1;
     }
 }
 
@@ -26,20 +29,53 @@ class Solution {
 //Optimal Approach (Monotonically decreasing stack)
 
 class Solution {
-    public long[] previousGreater(long[] arr, int n) {
-        Deque<Long> stack = new ArrayDeque<>();
-        long[] previousGreaterElement = new long[n];
+    /*
+     * We store indices in the stack instead of values.
+     *
+     * Reason:
+     * The array may contain duplicate elements. If only values were stored,
+     * two identical values appearing at different positions could not be
+     * distinguished. By storing indices, each occurrence is treated
+     * independently and the corresponding value can always be accessed
+     * using arr[index].
+     *
+     * Why do we traverse from the front (left → right)?
+     *
+     * When processing arr[i], all elements to its left have already been
+     * processed and can potentially act as candidates for the previous
+     * greater element. These candidates are maintained in the stack.
+     *
+     * Stack Property:
+     * The stack is maintained as a monotonic decreasing stack with
+     * respect to the array values.
+     *
+     * This means the values decrease from bottom → top.
+     * The largest elements remain deeper in the stack, while smaller
+     * elements stay closer to the top.
+     *
+     * As a result, the top of the stack always represents the nearest
+     * greater candidate on the left.
+     */
 
-        for (int i = 0; i < n; i++) {
-            while (!stack.isEmpty() && stack.peek() <= arr[i]) {
+    static ArrayList<Integer> preGreaterEle(int[] arr) {
+        Deque<Integer> stack = new ArrayDeque<>();
+        ArrayList<Integer> prevGreaterElements = new ArrayList<>();
+
+        for (int i = 0; i < arr.length; i++) {
+
+            while (!stack.isEmpty() && arr[stack.peek()] <= arr[i]) {
                 stack.pop();
             }
 
-            previousGreaterElement[i] = stack.isEmpty() ? -1L : stack.peek();
+            if (stack.isEmpty()) {
+                prevGreaterElements.add(-1);
+            } else {
+                prevGreaterElements.add(arr[stack.peek()]);
+            }
 
-            stack.push(arr[i]);
+            stack.push(i);
         }
 
-        return previousGreaterElement;
+        return prevGreaterElements;
     }
 }
