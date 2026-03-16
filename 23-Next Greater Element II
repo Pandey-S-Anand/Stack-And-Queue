@@ -54,14 +54,6 @@ class Solution {
 class Solution {
     public int[] nextGreaterElements(int[] arr) {
         /*
-         * We store indices in the stack instead of values.
-         *
-         * Reason:
-         * The array may contain duplicate elements. If values were stored,
-         * two identical values at different positions could not be distinguished.
-         * By storing indices we can always retrieve the corresponding value
-         * using arr[index].
-         *
          * Stack Property:
          * The stack is maintained as a monotonic decreasing stack
          * (with respect to array values).
@@ -75,11 +67,11 @@ class Solution {
         // First pass: prepare stack with potential NGE candidates
         for (int i = arr.length - 1; i >= 0; i--) {
 
-            while (!stack.isEmpty() && arr[stack.peek()] <= arr[i]) {
+            while (!stack.isEmpty() && stack.peek() <= arr[i]) {
                 stack.pop();
             }
 
-            stack.push(i);
+            stack.push(arr[i]);
         }
 
         /*
@@ -114,17 +106,17 @@ class Solution {
         // Second pass: compute the actual Next Greater Element
         for (int i = arr.length - 1; i >= 0; i--) {
 
-            while (!stack.isEmpty() && arr[stack.peek()] <= arr[i]) {
+            while (!stack.isEmpty() && stack.peek() <= arr[i]) {
                 stack.pop();
             }
 
             if (stack.isEmpty()) {
                 nextLargerElements[i] = -1;
             } else {
-                nextLargerElements[i] = arr[stack.peek()];
+                nextLargerElements[i] = stack.peek();
             }
 
-            stack.push(i);
+            stack.push(arr[i]);
         }
 
         return nextLargerElements;
