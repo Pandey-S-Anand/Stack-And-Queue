@@ -1,46 +1,87 @@
 //Bruteforce Approach
 
 class Solution {
-    static List<Integer> leftSmaller(int n, int arr[]) {
-        Deque<Integer> stack = new ArrayDeque<>();
-        List<Integer> previousSmaller = new ArrayList<>();
+    int[] leftSmaller(int arr[]) {
+        // Array to store the previous smaller element for each index
+        int[] prevSmallerElements = new int[arr.length];
 
-        for (int i = 0; i < n; i++) {
-            previousSmaller.add(previousSmaller(arr, n, i));
+        // For every element, find the first smaller element on its left
+        for (int i = 0; i < arr.length; i++) {
+            prevSmallerElements[i] = findPreviousSmaller(arr, i);
         }
 
-        return previousSmaller;
+        return prevSmallerElements;
     }
 
-    private static int previousSmaller(int[] arr, int n, int index) {
+    /**
+     * Searches linearly to the left of the given index
+     * to find the first element smaller than arr[index].
+     *
+     * Returns:
+     * The nearest smaller element on the left if found,
+     * otherwise returns -1.
+     */
+    private int findPreviousSmaller(int[] arr, int index) {
+
+        // Scan all elements to the left of the current index
         for (int i = index - 1; i >= 0; i--) {
+
+            // First smaller element found
             if (arr[i] < arr[index]) {
                 return arr[i];
             }
         }
 
+        // No smaller element exists on the left
         return -1;
     }
 }
 
 
-//Optimal Approach
+//Optimal Approach (Monotonic increasing stack)
 
 class Solution {
-    static List<Integer> leftSmaller(int n, int arr[]) {
+    /*
+    * Algorithm Insight
+    * -----------------
+    * We traverse the array from left to right so that when we process
+    * arr[i], all elements to its left have already been considered
+    * and can serve as potential candidates for the previous smaller element.
+    *
+    * These candidates are maintained using a stack.
+    *
+    *
+    * Stack Property
+    * --------------
+    * The stack is maintained as a monotonic increasing stack
+    * with respect to the array values.
+    *
+    * Values increase from bottom → top.
+    * Smaller values remain deeper in the stack, while larger values
+    * stay closer to the top.
+    *
+    * After removing all elements greater than or equal to arr[i],
+    * the element at the top of the stack represents the nearest
+    * smaller element to the left.
+    */
+    public int[] leftSmaller(int[] arr) {
         Deque<Integer> stack = new ArrayDeque<>();
-        List<Integer> previousSmaller = new ArrayList<>();
+        int[] prevSmallerElements = new int[arr.length];
 
-        for (int val : arr) {
-            while (!stack.isEmpty() && stack.peek() >= val) {
+        for (int i = 0; i < arr.length; i++) {
+            while (!stack.isEmpty() && stack.peek() >= arr[i]) {
                 stack.pop();
             }
 
-            previousSmaller.add(stack.isEmpty() ? -1 : stack.peek());
+            if (stack.isEmpty()) {
+                prevSmallerElements[i] = -1;
+            } else {
+                prevSmallerElements[i] = stack.peek();
+            }
 
-            stack.push(val);
+            stack.push(arr[i]);
         }
 
-        return previousSmaller;
+        return prevSmallerElements;
     }
 }
