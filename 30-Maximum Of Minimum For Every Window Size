@@ -1,84 +1,268 @@
 //Bruteforce Approach
 
 class Solution {
-    public ArrayList<Integer> maxOfMin(int[] arr) {
-        ArrayList<Integer> result = new ArrayList<>();
+    /*
+     * For every possible window size (from 1 to n), we:
+     *
+     * 1. Slide a window of size k across the array
+     * 2. For each window, compute the minimum element
+     * 3. Track the maximum among all these minimums
+     *
+     * In short:
+     * For each window size k → find (max of all window minimums)
+     */
+    public ArrayList<Integer> maxOfMins(int[] arr) {
+        // Stores result for each window size
+        ArrayList<Integer> maxOfMinForWindowSizes = new ArrayList<>();
 
         for (int windowSize = 1; windowSize <= arr.length; windowSize++) {
-            result.add(maxOfMinInWindow(windowSize, arr));
+            maxOfMinForWindowSizes.add(maxOfMinOfSizeKWindow(arr, windowSize));
         }
 
-        return result;
+        return maxOfMinForWindowSizes;
     }
 
-    private int maxOfMinInWindow(int k, int[] arr) {
-        int maxOfMin = Integer.MIN_VALUE;
+    /**
+     * Computes the maximum among all minimum values
+     * for windows of size k.
+     */
+    private int maxOfMinOfSizeKWindow(int[] arr, int k) {
+        int maxOfWindowMins = Integer.MIN_VALUE;
 
-        // Iterate over all possible windows of size k
-        for (int i = 0; i <= arr.length - k; i++) {
-            int currentMin = Integer.MAX_VALUE;
+        int windowStart = 0;
+        int windowEnd = 0;
 
-            // Find the minimum in the current window
-            for (int j = i; j < i + k; j++) {
-                currentMin = Math.min(currentMin, arr[j]);
-            }
-
-            // Update the maximum of the minimums
-            maxOfMin = Math.max(maxOfMin, currentMin);
+        // Initialize first window
+        while (windowEnd < k) {
+            windowEnd++;
         }
 
-        return maxOfMin;
+        int windowMin = findMinInWindow(arr, windowStart, windowEnd - 1);
+        maxOfWindowMins = Math.max(maxOfWindowMins, windowMin);
+
+        // Slide the window
+        while (windowEnd < arr.length) {
+            windowStart++;
+
+            windowMin = findMinInWindow(arr, windowStart, windowEnd);
+            maxOfWindowMins = Math.max(maxOfWindowMins, windowMin);
+
+            windowEnd++;
+        }
+
+        return maxOfWindowMins;
+    }
+
+    // Finds the minimum element in the given window [start, end]
+    private int findMinInWindow(int[] arr, int windowStart, int windowEnd) {
+        int min = Integer.MAX_VALUE;
+
+        for (int i = windowStart; i <= windowEnd; i++) {
+            min = Math.min(min, arr[i]);
+        }
+
+        return min;
     }
 }
 
 
-//Better Approach (Using monotonic increasing deque)
+//Improved Approach 
 
 class Solution {
-    public ArrayList<Integer> maxOfMin(int[] arr) {
-        ArrayList<Integer> result = new ArrayList<>();
+    public ArrayList<Integer> maxOfMins(int[] arr) {
+        // Stores answer for each window size
+        ArrayList<Integer> maxOfMinForWindowSizes = new ArrayList<>();
 
+        // Iterate over all possible window sizes
         for (int windowSize = 1; windowSize <= arr.length; windowSize++) {
-            result.add(maxOfMinInWindow(windowSize, arr));
+            maxOfMinForWindowSizes.add(maxOfMinOfSizeKWindow(arr, windowSize));
         }
 
-        return result;
+        return maxOfMinForWindowSizes;
     }
 
-    private int maxOfMinInWindow(int k, int[] arr) {
-        Deque<Integer> deque = new ArrayDeque<>();
-        int maxOfMin = Integer.MIN_VALUE;
+    private int maxOfMinOfSizeKWindow(int[] arr, int k) {
+        /*
+         * Min Heap stores index of the element
+         *
+         * The heap is ordered by the VALUE at those indices in ascending order,
+         * This ensures:
+         * - The index at the top of the heap always corresponds
+         *   to the minimum value in the current heap.
+         *
+         * Important:
+         * - Indices are stored to identify and discard elements
+         *   that fall out of the current window, i.e., elements
+         *   that are part of previous windows.
+         */
+        Queue<Integer> minHeap = new PriorityQueue<>((idx1, idx2) -> Integer.compare(arr[idx1], arr[idx2]));
+        int maxOfWindowMins = Integer.MIN_VALUE;
+        int windowStart = 0;
+        int windowEnd = 0;
+
+        /*
+        * Build the first window of size k.
+        * Insert indices of all elements of the first window into the heap.
+        */
+        while (windowEnd < k) {
+            minHeap.offer(windowEnd++);
+        }
+
+        // Compute minimum for first window 
+        int windowMin = getMinInWindow(minHeap, arr, windowStart);
+        maxOfWindowMins = Math.max(maxOfWindowMins, windowMin);
+
+        /*
+        * Slide the window:
+        * - Move windowStart forward
+        * - Add the new element's index entering the window to the heap
+        */
+        while (windowEnd < arr.length) {
+            windowStart++;
+            // Add the index of the new element entering the window
+            minHeap.offer(windowEnd);
+
+            // Get the maximum element for the current window
+            windowMin = getMinInWindow(minHeap, arr, windowStart);
+            maxOfWindowMins = Math.max(maxOfWindowMins, windowMin);
+
+            windowEnd++;
+        }
+
+        return maxOfWindowMins;
+    }
+
+    private int getMinInWindow(Queue<Integer> minHeap, int[] arr, int windowStart) {
+        /*
+         * The min heap always keeps the index whose corresponding
+         * value in the array is minimum among all stored indices.
+         *
+         * However, the index at the top of the heap may not
+         * necessarily belong to the current window.
+         * It could belong to a previous window.
+         *
+         * Therefore, before using the heap's top index,
+         * we remove all indices that are less than windowStart,
+         * because they fall outside the current window.
+         *
+         * Once all outdated indices are removed,
+         * the index at the top of the heap is guaranteed
+         * to correspond to the minimum element within the current window.
+         * ---------------------------------------------------------------
+         * Key Takeaways:
+         *
+         * - The heap may store indices from older windows.
+         * - This approach uses lazy removal for indices in the heap,
+         *   indices are only removed when they impact the minimum value of the current window. 
+         * - This guarantees correctness while avoiding unnecessary removals.
+         */
+        while (!minHeap.isEmpty() && minHeap.peek() < windowStart) {
+            minHeap.poll();
+        }
+
+        // The top index corresponds to the maximum in the current window
+        return arr[minHeap.peek()];
+    }
+}
+
+
+//Better Approach
+
+class Solution {
+    public ArrayList<Integer> maxOfMins(int[] arr) {
+        // Stores answer for each window size
+        ArrayList<Integer> maxOfMinForWindowSizes = new ArrayList<>();
+
+        //Iterate over all possible window sizes
+        for (int windowSize = 1; windowSize <= arr.length; windowSize++) {
+            maxOfMinForWindowSizes.add(maxOfMinOfSizeKWindow(arr, windowSize));
+        }
+
+        return maxOfMinForWindowSizes;
+    }
+
+    /*
+    * Intuition:
+    *
+    * The deque always contains only those elements that can still become
+    * the minimum in some future window.
+    *
+    * We keep elements that are greater but to the RIGHT of the current maximum
+    * because they are potential candidates for the minimum when the current
+    * minimum (at the front of the deque) slides out of the window.
+    *
+    * Why can we safely remove greater elements to the LEFT?
+    *
+    * If an element A is greater than a newer element B and A appears to the
+    * left of B, then A can never be the minimum of any future window that
+    * contains B.
+    *
+    * Reason:
+    * - B is already smaller than A, so B will always dominate A in any window
+    *   containing both.
+    * - B enters later and stays longer in future windows, while A will slide
+    *   out earlier.
+    * - Even if a newer element enters, it will either replace B (if smaller)
+    *   or B will remain the minimum.
+    *
+    * Therefore, for as long as the current minimum remains inside the window,
+    * any greater element to its left is useless. When the minimum slides out,
+    * the deque already contains the next best candidates from the right.
+    */
+    private int maxOfMinOfSizeKWindow(int[] arr, int k) {
+        ArrayDeque<Integer> increasingQueue = new ArrayDeque<>();
+
+        int maxOfWindowMins = Integer.MIN_VALUE;
+        int windowStart = 0;
+        int windowEnd = 0;
 
         // Process the first window separately
-        for (int i = 0; i < k; i++) {
-            // Maintain a monotonic increasing deque where the smallest element is always at the front
-            while (!deque.isEmpty() && arr[deque.peekLast()] >= arr[i]) {
-                deque.pollLast();
+        while (windowEnd < k) {
+            while (!increasingQueue.isEmpty() && arr[increasingQueue.peekLast()] >= arr[windowEnd]) {
+                increasingQueue.pollLast();
             }
-            deque.offerLast(i);
+            increasingQueue.offerLast(windowEnd++);
         }
 
-        // The front of the deque is the minimum of the 1st window
-        maxOfMin = Math.max(maxOfMin, arr[deque.peekFirst()]);
+        // The minimum for the first window
+        int windowMin = arr[increasingQueue.peekFirst()];
+        maxOfWindowMins = Math.max(maxOfWindowMins, windowMin);
 
-        // Process the remaining windows
-        for (int windowEndIndex = k; windowEndIndex < arr.length; windowEndIndex++) {
-            // Maintain the deque for the current window
-            while (!deque.isEmpty() && arr[deque.peekLast()] >= arr[windowEndIndex]) {
-                deque.pollLast();
-            }
-            deque.offerLast(windowEndIndex);
-
-            // Remove element from the deque if the maximum no longer belongs to the current window, i.e., it belongs to the previous window.
-            if (!deque.isEmpty() && deque.peekFirst() <= windowEndIndex - k) {
-                deque.pollFirst();
-            }
-
-            // The front of the deque is the minimum of the current window
-            maxOfMin = Math.max(maxOfMin, arr[deque.peekFirst()]);
+        // Process the second window and all subsequent windows
+        while (windowEnd < arr.length) {
+            windowStart++;
+            windowMin = getMinInWindow(increasingQueue, arr, windowStart, windowEnd);
+            maxOfWindowMins = Math.max(maxOfWindowMins, windowMin);
+            windowEnd++;
         }
 
-        return maxOfMin;
+        return maxOfWindowMins;
+    }
+
+    private int getMinInWindow(ArrayDeque<Integer> increasingQueue, int[] arr, int windowStart, int windowEnd) {
+        while (!increasingQueue.isEmpty() && arr[increasingQueue.peekLast()] >= arr[windowEnd]) {
+            increasingQueue.pollLast();
+        }
+
+        increasingQueue.offerLast(windowEnd);
+
+        /*
+        * Since the sliding window moves by 1 position at each step,
+        * the minimum element, which is always at the front of the deque
+        * (because the deque is maintained in increasing order), is the
+        * only element that can potentially fall out of the window.
+        * 
+        * As the left boundary of the window advances by 1 index, we need
+        * to check if the element at the front of the deque is outside the
+        * current window. If it is, we remove it to ensure the deque only
+        * contains indices within the current window.
+        * Ex: [5, 3, 4]
+        */
+        if (increasingQueue.peekFirst() < windowStart) {
+            increasingQueue.pollFirst();
+        }
+
+        return arr[increasingQueue.peekFirst()];
     }
 }
 
