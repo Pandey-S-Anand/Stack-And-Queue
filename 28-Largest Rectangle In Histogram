@@ -247,10 +247,10 @@ class Solution {
                 // Pop the index and compute the largest rectangle where this bar is the limiting height
                 int barHeight = heights[stack.pop()];
                 // The index of the previous smaller element for the popped 'barHeight' is now at the top of the stack
-                int previousSmallerElementIndex = stack.isEmpty() ? -1 : stack.peek();
+                int previousSmallerIndex = stack.isEmpty() ? -1 : stack.peek();
                 // The current index `i` is the next smaller element index for the popped 'barHeight' as barHeight >= heights[i]
-                int nextSmallerElementIndex = i;
-                int width = nextSmallerElementIndex - previousSmallerElementIndex - 1;
+                int nextSmallerIndex = i;
+                int width = nextSmallerIndex - previousSmallerIndex - 1;
                 maxArea = Math.max(maxArea, barHeight * width);
             }
             // Push the current index onto the stack
@@ -269,10 +269,10 @@ class Solution {
             // Pop the index and compute the largest rectangle where this bar is the limiting height
             int barHeight = heights[stack.pop()];
             // The index of the previous smaller element for the popped 'barHeight' is now at the top of the stack
-            int previousSmallerElementIndex = stack.isEmpty() ? -1 : stack.peek();
+            int previousSmallerIndex = stack.isEmpty() ? -1 : stack.peek();
             // As there is no smaller element to the right, set the next smaller element index to `heights.length` for the popped 'barHeight'.
-            int nextSmallerElementIndex = heights.length;
-            int width = nextSmallerElementIndex - previousSmallerElementIndex - 1;
+            int nextSmallerIndex = heights.length;
+            int width = nextSmallerIndex - previousSmallerIndex - 1;
             maxArea = Math.max(maxArea, barHeight * width);
         }
 
