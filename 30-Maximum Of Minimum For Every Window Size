@@ -13,20 +13,20 @@ class Solution {
      */
     public ArrayList<Integer> maxOfMins(int[] arr) {
         // Stores result for each window size
-        ArrayList<Integer> maxOfMinForWindowSizes = new ArrayList<>();
+        ArrayList<Integer> maxOfMin = new ArrayList<>();
 
         for (int windowSize = 1; windowSize <= arr.length; windowSize++) {
-            maxOfMinForWindowSizes.add(maxOfMinOfSizeKWindow(arr, windowSize));
+            maxOfMin.add(findMaxOfMinOfSizeKWindow(arr, windowSize));
         }
 
-        return maxOfMinForWindowSizes;
+        return maxOfMin;
     }
 
     /**
      * Computes the maximum among all minimum values
      * for windows of size k.
      */
-    private int maxOfMinOfSizeKWindow(int[] arr, int k) {
+    private int findMaxOfMinOfSizeKWindow(int[] arr, int k) {
         int maxOfWindowMins = Integer.MIN_VALUE;
 
         int windowStart = 0;
@@ -71,17 +71,17 @@ class Solution {
 class Solution {
     public ArrayList<Integer> maxOfMins(int[] arr) {
         // Stores answer for each window size
-        ArrayList<Integer> maxOfMinForWindowSizes = new ArrayList<>();
+        ArrayList<Integer> maxOfMin = new ArrayList<>();
 
         // Iterate over all possible window sizes
         for (int windowSize = 1; windowSize <= arr.length; windowSize++) {
-            maxOfMinForWindowSizes.add(maxOfMinOfSizeKWindow(arr, windowSize));
+            maxOfMin.add(findMaxOfMinOfSizeKWindow(arr, windowSize));
         }
 
-        return maxOfMinForWindowSizes;
+        return maxOfMin;
     }
 
-    private int maxOfMinOfSizeKWindow(int[] arr, int k) {
+    private int findMaxOfMinOfSizeKWindow(int[] arr, int k) {
         /*
          * Min Heap stores index of the element
          *
@@ -171,14 +171,14 @@ class Solution {
 class Solution {
     public ArrayList<Integer> maxOfMins(int[] arr) {
         // Stores answer for each window size
-        ArrayList<Integer> maxOfMinForWindowSizes = new ArrayList<>();
+        ArrayList<Integer> maxOfMin = new ArrayList<>();
 
         //Iterate over all possible window sizes
         for (int windowSize = 1; windowSize <= arr.length; windowSize++) {
-            maxOfMinForWindowSizes.add(maxOfMinOfSizeKWindow(arr, windowSize));
+            maxOfMin.add(findMaxOfMinOfSizeKWindow(arr, windowSize));
         }
 
-        return maxOfMinForWindowSizes;
+        return maxOfMin;
     }
 
     /*
@@ -209,7 +209,7 @@ class Solution {
     * any greater element to its left is useless. When the minimum slides out,
     * the deque already contains the next best candidates from the right.
     */
-    private int maxOfMinOfSizeKWindow(int[] arr, int k) {
+    private int findMaxOfMinOfSizeKWindow(int[] arr, int k) {
         ArrayDeque<Integer> increasingQueue = new ArrayDeque<>();
 
         int maxOfWindowMins = Integer.MIN_VALUE;
