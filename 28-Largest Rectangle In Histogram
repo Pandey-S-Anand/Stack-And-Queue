@@ -3,62 +3,105 @@
 class Solution {
     public int largestRectangleArea(int[] heights) {
         int maxArea = 0;
+
         for (int i = 0; i < heights.length; i++) {
             int height = heights[i];
-            int width = findNextSmallerIndex(heights, i) - (findPreviousSmallerIndex(heights, i) + 1);
+
+            // Determine the width using the nearest smaller elements
+            int width = findNextSmallerIndex(heights, i) - findPreviousSmallerIndex(heights, i) - 1;
             int area = height * width;
+
             maxArea = Math.max(maxArea, area);
         }
+
         return maxArea;
     }
 
-    // Find the index of the nearest smaller element to the left of the given index
+    /**
+     * Finds the index of the nearest smaller element
+     * to the left of the given index.
+     *
+     * If no such element exists, return -1.
+     */
     private int findPreviousSmallerIndex(int[] heights, int index) {
         for (int i = index - 1; i >= 0; i--) {
             if (heights[i] < heights[index]) {
                 return i;
             }
         }
-        return -1; // No smaller element found to the left
+
+        return -1; // No smaller element on the left
     }
 
-    // Find the index of the nearest smaller element to the right of the given index
+    /**
+     * Finds the index of the nearest smaller element
+     * to the right of the given index.
+     *
+     * If no such element exists, return heights.length
+     * to indicate that the rectangle can extend to the
+     * end of the histogram.
+     */
     private int findNextSmallerIndex(int[] heights, int index) {
         for (int i = index + 1; i < heights.length; i++) {
             if (heights[i] < heights[index]) {
                 return i;
             }
         }
-        return heights.length; // No smaller element found to the right
+
+        return heights.length; // No smaller element on the right
     }
 }
 
 
 //Optimal Approach (Using monotonic increasing stack)
-/* 
- * A monotonically increasing stack stores elements in ascending order 
- * from the bottom to the top of the stack. Each element in the stack is 
- * smaller than or equal to the element above it. As we push elements, 
- * we ensure that the stack maintains this increasing order.
- */
 
 //Naive Implementation
 
 class Solution {
-    private Deque<Integer> stack;
-
+    /*
+     * Improvement over the brute force approach
+     * -----------------------------------------
+     * In the brute force solution, for every bar we scanned the entire left
+     * and right side to find the nearest smaller elements.
+     *
+     * To optimize this, we precompute two arrays:
+     *
+     * 1. prevSmallerIndices[i] → index of the nearest smaller bar to the left
+     * 2. nextSmallerIndices[i] → index of the nearest smaller bar to the right
+     *
+     * These arrays can be computed in O(n) time using a Monotonic Stack.
+     *
+     * Once these boundaries are known, the maximum rectangle that can be formed
+     * using heights[i] as the limiting height is determined by the width between
+     * these two smaller bars.
+     *
+     * width = nextSmallerIndices[i] - prevSmallerIndices[i] - 1
+     *
+     * area = heights[i] * width
+     *
+     * We compute this area for every bar and track the maximum value.
+     *
+     * Why do we store indices in the stack instead of values?
+     * -------------------------------------------------------
+     * In this problem, we need the exact indices of the nearest smaller
+     * elements to calculate the width of the rectangle.
+     *
+     * Since the rectangle width depends on the distance between indices,
+     * storing only values would not allow us to determine this distance.
+     */
     public int largestRectangleArea(int[] heights) {
-        stack = new ArrayDeque<>();
         int maxArea = 0;
 
-        int[] nextSmallerElementIndex = findNextSmallerIndices(heights);
-        stack.clear();
-        int[] previousSmallerElementIndex = findPreviousSmallerIndices(heights);
+        int[] prevSmallerIndices = findPreviousSmallerIndices(heights);
+        int[] nextSmallerIndices = findNextSmallerIndices(heights);
 
         for (int i = 0; i < heights.length; i++) {
-            int currentHeight = heights[i];
-            int width = nextSmallerElementIndex[i] - previousSmallerElementIndex[i] - 1;
-            int area = currentHeight * width;
+            int height = heights[i];
+
+            int width = nextSmallerIndices[i] - prevSmallerIndices[i] - 1;
+
+            int area = height * width;
+
             maxArea = Math.max(maxArea, area);
         }
 
@@ -66,61 +109,83 @@ class Solution {
     }
 
     private int[] findPreviousSmallerIndices(int[] heights) {
-        int[] previousSmallerElementIndex = new int[heights.length];
+        int[] prevSmallerIndices = new int[heights.length];
+        Deque<Integer> stack = new ArrayDeque<>();
 
         for (int i = 0; i < heights.length; i++) {
             while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) {
                 stack.pop();
             }
 
-            previousSmallerElementIndex[i] = stack.isEmpty() ? -1 : stack.peek();
+            prevSmallerIndices[i] = stack.isEmpty() ? -1 : stack.peek();
 
             stack.push(i);
         }
 
-        return previousSmallerElementIndex;
+        return prevSmallerIndices;
     }
 
     private int[] findNextSmallerIndices(int[] heights) {
-        int[] nextSmallerElementIndex = new int[heights.length];
+        int[] nextSmallerIndices = new int[heights.length];
+        Deque<Integer> stack = new ArrayDeque<>();
 
         for (int i = heights.length - 1; i >= 0; i--) {
+
             while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) {
                 stack.pop();
             }
 
-            nextSmallerElementIndex[i] = stack.isEmpty() ? heights.length : stack.peek();
+            nextSmallerIndices[i] = stack.isEmpty() ? heights.length : stack.peek();
 
             stack.push(i);
         }
 
-        return nextSmallerElementIndex;
+        return nextSmallerIndices;
     }
 }
+
 
 
 //Good Implementation
 
 class Solution {
-    private Deque<Integer> stack;
-
+    /*
+    * Further Improvement
+    * -------------------
+    * Instead of precomputing both previous and next smaller indices,
+    * we compute only the next smaller indices beforehand.
+    *
+    * The previous smaller index is calculated on the fly while traversing
+    * the array using a monotonic increasing stack.
+    *
+    * This removes the need for an additional array for previous smaller
+    * elements and reduces extra space usage.
+    *
+    * The stack naturally maintains the nearest smaller element to the left,
+    * so we can retrieve the previous smaller index in O(1) time during
+    * the main traversal.
+    */
     public int largestRectangleArea(int[] heights) {
         int maxArea = 0;
-        stack = new ArrayDeque<>();
-        int[] nextSmallerElementIndex = findNextSmallerElementIndices(heights);
-        stack.clear();
+
+        int[] nextSmallerIndices = findNextSmallerIndices(heights);
+        Deque<Integer> stack = new ArrayDeque<>();
 
         for (int i = 0; i < heights.length; i++) {
             while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) {
                 stack.pop();
             }
 
-            int previousSmallerElementIndex = stack.isEmpty() ? -1 : stack.peek();
+            int prevSmallerIndex = stack.isEmpty() ? -1 : stack.peek();
 
             int height = heights[i];
-            int width = nextSmallerElementIndex[i] - previousSmallerElementIndex - 1;
+
+            int width = nextSmallerIndices[i] - prevSmallerIndex - 1;
+
             int area = height * width;
+
             maxArea = Math.max(maxArea, area);
+
             stack.push(i);
         }
 
@@ -128,19 +193,21 @@ class Solution {
     }
 
     private int[] findNextSmallerIndices(int[] heights) {
-        int[] nextSmallerElementIndex = new int[heights.length];
+        int[] nextSmallerIndices = new int[heights.length];
+        Deque<Integer> stack = new ArrayDeque<>();
 
         for (int i = heights.length - 1; i >= 0; i--) {
+
             while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) {
                 stack.pop();
             }
 
-            nextSmallerElementIndex[i] = stack.isEmpty() ? heights.length : stack.peek();
+            nextSmallerIndices[i] = stack.isEmpty() ? heights.length : stack.peek();
 
             stack.push(i);
         }
 
-        return nextSmallerElementIndex;
+        return nextSmallerIndices;
     }
 }
 
@@ -148,64 +215,65 @@ class Solution {
 //Optimal Implementation 
 
 class Solution {
+    /*
+     * Important Note on "Next Smaller Element"
+     * ---------------------------------------
+     * While popping, we treat the current index `i` as the next smaller element
+     * for the popped bar. However, this is not strictly accurate in the case
+     * of equal heights.
+     *
+     * For bars with equal height, expansion is still possible and does not
+     * truly stop at the current index. A rectangle can extend across equal
+     * height bars and only stops when a strictly smaller height is encountered.
+     *
+     * When the popped height and current height are equal, we are computing
+     * an incorrect maximum possible area for that popped bar height. These areas do not
+     * represent the maximum possible expansion for that height.
+     *
+     * However, the rightmost occurrence of that height remains in the stack
+     * and eventually captures the full expansion (i.e., the correct maximum width)
+     * when it is processed later.
+     *
+     * In other words:
+     * - Earlier equal-height bars may compute incomplete areas
+     * - The last occurrence of that height computes the full correct area
+     */
     public int largestRectangleArea(int[] heights) {
         Deque<Integer> stack = new ArrayDeque<>();
         int maxArea = 0;
 
         for (int i = 0; i < heights.length; i++) {
             while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) {
-                // Pop the top index and get the height of the rectangle
-                int height = heights[stack.pop()];
-                // The index of the previous smaller element for the popped height is now at the top of the stack
+                // Pop the index and compute the largest rectangle where this bar is the limiting height
+                int barHeight = heights[stack.pop()];
+                // The index of the previous smaller element for the popped 'barHeight' is now at the top of the stack
                 int previousSmallerElementIndex = stack.isEmpty() ? -1 : stack.peek();
-                // The current index `i` is the next smaller element for the popped height
+                // The current index `i` is the next smaller element index for the popped 'barHeight' as barHeight >= heights[i]
                 int nextSmallerElementIndex = i;
                 int width = nextSmallerElementIndex - previousSmallerElementIndex - 1;
-                maxArea = Math.max(maxArea, height * width);
+                maxArea = Math.max(maxArea, barHeight * width);
             }
             // Push the current index onto the stack
             stack.push(i);
         }
 
-        // Process remaining elements in the stack after the iteration completes
+        /*
+         * Elements remaining in the stack do not have any next smaller bar
+         * to their right. Therefore, their rectangle can extend until the
+         * end of the histogram.
+         *
+         * Hence we treat the right boundary as heights.length and compute
+         * the area accordingly.
+         */
         while (!stack.isEmpty()) {
-            // Pop the top index and get the height of the rectangle
-            int height = heights[stack.pop()];
-            // The index of the previous smaller element for the popped height is now at the top of the stack
+            // Pop the index and compute the largest rectangle where this bar is the limiting height
+            int barHeight = heights[stack.pop()];
+            // The index of the previous smaller element for the popped 'barHeight' is now at the top of the stack
             int previousSmallerElementIndex = stack.isEmpty() ? -1 : stack.peek();
-            // As there is no smaller element to the right, set the next smaller element index to `heights.length` for the popped height.
+            // As there is no smaller element to the right, set the next smaller element index to `heights.length` for the popped 'barHeight'.
             int nextSmallerElementIndex = heights.length;
             int width = nextSmallerElementIndex - previousSmallerElementIndex - 1;
-            maxArea = Math.max(maxArea, height * width);
-        }
-
-        return maxArea;
-    }
-}
-
-
-//Aliter
-
-class Solution {
-    public int largestRectangleArea(int[] heights) {
-        Deque<Integer> stack = new ArrayDeque<>();
-        int maxArea = 0;
-
-        for (int i = 0; i < heights.length; i++) {
-            while (!stack.isEmpty() && heights[stack.peek()] >= heights[i]) {
-                int height = heights[stack.pop()];
-                int previousSmallerElementIndex = stack.isEmpty() ? -1 : stack.peek();
-                int width = i - previousSmallerElementIndex - 1;
-                maxArea = Math.max(maxArea, height * width);
-            }
-            stack.push(i);
-        }
-
-        while (!stack.isEmpty()) {
-            int height = heights[stack.pop()];
-            int previousSmallerElementIndex = stack.isEmpty() ? -1 : stack.peek();
-            int width = heights.length - previousSmallerElementIndex - 1;
-            maxArea = Math.max(maxArea, height * width);
+            maxArea = Math.max(maxArea, barHeight * width);
         }
 
         return maxArea;
