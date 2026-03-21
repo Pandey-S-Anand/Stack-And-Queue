@@ -293,88 +293,61 @@ class Solution {
  * "In how many subarrays does this element act as the minimum?"
  *
  * The formula to compute this is based on the count of elements
- * greater than the current element to its left and right
- * (without breaking the sequence). Let's define:
+ * to its left and right where it remains the minimum.
  *
- * Count of elements greater than arr[i] on the right side:
- *   = nextSmallerOrEqualIndex(arr[i]) - i
+ * Count of elements on the right side:
+ *   = nextSmallerIndex(arr[i]) - i
  *
- * Count of elements greater than arr[i] on the left side:
+ * Count of elements on the left side:
  *   = i - prevSmallerIndex(arr[i])
  *
  * The number of subarrays where arr[i] is the minimum is:
- *   (nextSmallerOrEqualIndex(arr[i]) - i) * (i - prevSmallerIndex(arr[i]))
+ *   (nextSmallerIndex(arr[i]) - i) *
+ *   (i - prevSmallerIndex(arr[i]))
  *
  * The total sum of minimums across all subarrays will be:
- *   sum += arr[i] * ((nextSmallerOrEqualIndex(arr[i]) - i) * (i - prevSmallerIndex(arr[i])))
- *   for each element arr[i] in the array.
+ *   sum += arr[i] *
+ *          (nextSmallerIndex(arr[i]) - i) *
+ *          (i - prevSmallerIndex(arr[i]))
  *
  *
  * Example:
+ * --------
  * Consider the array: [7, 2, 4, 6, 3]
  *   Initial sum = 0
  *
  * Total subarrays where 7 is the minimum:
- *   - Subarrays: [7]
- *   - Count: 1
- *   - sum += (7 * 1)
+ *   Subarrays: [7]
+ *   Count: 1
+ *   Contribution: 7 * 1
  *
  * Total subarrays where 2 is the minimum:
- *   - Subarrays: [7, 2], [2], [2, 4, 6, 3], [2, 4, 6], [2, 4],
- *                [7, 2, 4, 6, 3], [7, 2, 4, 6], [7, 2, 4]
- *   - Count: 8
- *   - sum += (2 * 8)
+ *   Subarrays:
+ *     [7,2], [2], [2,4], [2,4,6], [2,4,6,3],
+ *     [7,2,4], [7,2,4,6], [7,2,4,6,3]
+ *   Count: 8
+ *   Contribution: 2 * 8
  *
  * Total subarrays where 4 is the minimum:
- *   - Subarrays: [4], [4, 6]
- *   - Count: 2
- *   - sum += (4 * 2)
+ *   Subarrays: [4], [4,6]
+ *   Count: 2
+ *   Contribution: 4 * 2
  *
  * Total subarrays where 6 is the minimum:
- *   - Subarrays: [6]
- *   - Count: 1
- *   - sum += (6 * 1)
+ *   Subarrays: [6]
+ *   Count: 1
+ *   Contribution: 6 * 1
  *
  * Total subarrays where 3 is the minimum:
- *   - Subarrays: [4, 6, 3], [6, 3], [3]
- *   - Count: 3
- *   - sum += (3 * 3)
+ *   Subarrays: [3], [6,3], [4,6,3]
+ *   Count: 3
+ *   Contribution: 3 * 3
  *
  * Final Total Sum = 45
  *
  *
- * => Corner case:
- *
- * Consider the array: [71, 55, 82, 55]
- *
- * Total subarrays where 71 is the minimum:
- *   - Subarrays: [71]
- *   - Count = 1
- *   - Contribution: 71 * 1 = 71
- *
- * Total subarrays where 55 is the minimum (first occurrence):
- *   - Subarrays: [71, 55], [55], [55, 82], [55, 82, 55],
- *                [71, 55, 82], [71, 55, 82, 55]
- *   - Count = 6
- *   - Contribution: 55 * 6 = 330
- *
- * Total subarrays where 82 is the minimum:
- *   - Subarrays: [82]
- *   - Count = 1
- *   - Contribution: 82 * 1 = 82
- *
- * Total subarrays where 55 is the minimum (second occurrence):
- *   - Subarrays: [71, 55, 82, 55], [55, 82, 55], [82, 55], [55]
- *   - Count = 4
- *   - Contribution: 55 * 4 = 220
- *
- * Issue with duplicate counting:
- * The subarrays [71, 55, 82, 55] and [55, 82, 55] are counted twice,
- * once for each occurrence of 55.
- *
- *
  * Handling Duplicates (Important):
- * -------------------------------
+ * --------------------------------
  * When the array contains duplicate values, care must be taken while
  * computing previous and next smaller elements.
  *
@@ -383,27 +356,111 @@ class Solution {
  * Case 1:
  *   Prev: >=
  *   Next: >=
- *   → Equal elements expand on both sides
- *   → Same subarray may be counted multiple times (overcounting)
+ *   → Overcounting (same subarray counted multiple times)
  *
  * Case 2:
  *   Prev: >
  *   Next: >
- *   → Equal elements are not properly assigned
- *   → Some subarrays may not be counted (undercounting)
+ *   → Undercounting (some subarrays missed)
  *
  * Correct Approach:
  *   Use one strict and one non-strict comparison:
  *
- *   - One side: strictly smaller (>)
- *   - Other side: smaller or equal (>=)
+ *     - One side: strictly smaller (>)
+ *     - Other side: smaller or equal (>=)
  *
  * This ensures:
  *   - Each subarray is counted exactly once
- *   - Duplicate elements do not cause overlap in contribution
+ *   - No overlap due to duplicates
  *
- * This technique is essentially a tie-breaking strategy
- * for handling equal elements correctly.
+ *
+ * Example (Corner Case):
+ * ----------------------
+ * Consider the array: [71, 55, 82, 55]
+ *
+ * i = 0, arr[i] = 71
+ *   prevSmallerIndex = -1
+ *   nextSmallerIndex = 1
+ *   left  = 1
+ *   right = 1
+ *   count = 1
+ *   Subarrays: [71]
+ *   Contribution = 71
+ *
+ * i = 1, arr[i] = 55 (first occurrence)
+ *   prevSmallerIndex = -1
+ *   nextSmallerIndex = 4
+ *   left  = 2
+ *   right = 3
+ *   count = 6
+ *   Subarrays:
+ *     [55], [55,82], [55,82,55],
+ *     [71,55], [71,55,82], [71,55,82,55]
+ *   Contribution = 330
+ *
+ * i = 2, arr[i] = 82
+ *   prevSmallerIndex = 1
+ *   nextSmallerIndex = 3
+ *   left  = 1
+ *   right = 1
+ *   count = 1
+ *   Subarrays: [82]
+ *   Contribution = 82
+ *
+ * i = 3, arr[i] = 55 (second occurrence)
+ *   prevSmallerIndex = -1
+ *   nextSmallerIndex = 4
+ *   left  = 4
+ *   right = 1
+ *   count = 4
+ *   Subarrays:
+ *     [55], [82,55], [55,82,55], [71,55,82,55]
+ *
+ *
+ * Problem:
+ *   Subarrays like [55,82,55] and [71,55,82,55]
+ *   are counted twice.
+ *
+ * Solution:
+ *   Adjust comparison on ONE side only (left OR right).
+ *
+ *
+ * Case 1 (Adjust right side):
+ *   Stop at next equal element
+ *
+ *   prevSmallerIndex      = -1
+ *   nextSmallerOrEqualIdx = 3
+ *   left  = 2
+ *   right = 2
+ *   count = 4
+ *
+ *   Subarrays:
+ *     [55], [55,82],
+ *     [71,55], [71,55,82]
+ *
+ *   Contribution = 220
+ *
+ *
+ * OR
+ *
+ * Case 2 (Adjust left side):
+ *   Stop at previous equal element
+ *
+ *   prevSmallerOrEqualIdx = 1
+ *   nextSmallerIndex      = 4
+ *   left  = 2
+ *   right = 1
+ *   count = 2
+ *
+ *   Subarrays:
+ *     [55], [82,55]
+ *
+ *   Contribution = 110
+ *
+ *
+ * Note:
+ *   These are two alternative implementations (Case 1 OR Case 2).
+ *   Do NOT apply both together.
  */
 class Solution {
     private static final int MOD = 1000000007;
