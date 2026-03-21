@@ -297,16 +297,16 @@ class Solution {
  * (without breaking the sequence). Let's define:
  *
  * Count of elements greater than arr[i] on the right side:
- *   = nextSmallerIndex(arr[i]) - i
+ *   = nextSmallerOrEqualIndex(arr[i]) - i
  *
  * Count of elements greater than arr[i] on the left side:
  *   = i - prevSmallerIndex(arr[i])
  *
  * The number of subarrays where arr[i] is the minimum is:
- *   (nextSmallerIndex(arr[i]) - i) * (i - prevSmallerIndex(arr[i]))
+ *   (nextSmallerOrEqualIndex(arr[i]) - i) * (i - prevSmallerIndex(arr[i]))
  *
  * The total sum of minimums across all subarrays will be:
- *   sum += arr[i] * ((nextSmallerIndex(arr[i]) - i) * (i - prevSmallerIndex(arr[i])))
+ *   sum += arr[i] * ((nextSmallerOrEqualIndex(arr[i]) - i) * (i - prevSmallerIndex(arr[i])))
  *   for each element arr[i] in the array.
  *
  *
@@ -411,7 +411,7 @@ class Solution {
     public int sumSubarrayMins(int[] arr) {
         long totalMinSum = 0;
 
-        int[] nextSmallerIndices = findNextSmallerIndices(arr);
+        int[] nextSmallerOrEqualIndices = findNextSmallerOrEqualIndices(arr);
         Deque<Integer> stack = new ArrayDeque<>();
 
         for (int i = 0; i < arr.length; i++) {
@@ -423,7 +423,7 @@ class Solution {
 
             stack.push(i);
 
-            long subarrayCount = (i - prevSmallerIndex) * (long) (nextSmallerIndices[i] - i);
+            long subarrayCount = (i - prevSmallerIndex) * (long) (nextSmallerOrEqualIndices[i] - i);
             subarrayCount = subarrayCount % MOD;
 
             totalMinSum = totalMinSum + (arr[i] * subarrayCount) % MOD;
@@ -433,20 +433,20 @@ class Solution {
         return (int) totalMinSum;
     }
 
-    private int[] findNextSmallerIndices(int[] arr) {
+    private int[] findNextSmallerOrEqualIndices(int[] arr) {
         Deque<Integer> stack = new ArrayDeque<>();
 
-        int[] nextSmallerIndices = new int[arr.length];
+        int[] nextSmallerOrEqualIndices = new int[arr.length];
 
         for (int i = arr.length - 1; i >= 0; i--) {
             while (!stack.isEmpty() && arr[stack.peek()] > arr[i]) {
                 stack.pop();
             }
 
-            nextSmallerIndices[i] = stack.isEmpty() ? arr.length : stack.peek();
+            nextSmallerOrEqualIndices[i] = stack.isEmpty() ? arr.length : stack.peek();
             stack.push(i);
         }
 
-        return nextSmallerIndices;
+        return nextSmallerOrEqualIndices;
     }
 }
