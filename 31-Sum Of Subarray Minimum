@@ -1,24 +1,31 @@
 //Bruterforce Approach
 
 class Solution {
-    private final int MOD = 1000000007;
+    private static final int MOD = 1_000_000_007;
 
     public int sumSubarrayMins(int[] arr) {
-        int sum = 0;
+        // Stores the total sum of minimums of all subarrays
+        int totalMinSum = 0;
+
+        // Generate all subarrays
         for (int start = 0; start < arr.length; start++) {
             for (int end = start; end < arr.length; end++) {
-                sum = (sum + findMinInSubarray(arr, start, end)) % MOD;
+                // Find minimum for current subarray [start, end]
+                int subarrayMin = findMinInSubarray(arr, start, end);
+
+                // Add to total sum
+                totalMinSum = (totalMinSum + (subarrayMin % MOD)) % MOD;
             }
         }
 
-        return sum;
+        return totalMinSum;
     }
 
     private int findMinInSubarray(int[] arr, int start, int end) {
         int min = Integer.MAX_VALUE;
 
         for (int i = start; i <= end; i++) {
-            min = Math.min(arr[i], min);
+            min = Math.min(min, arr[i]);
         }
 
         return min;
@@ -26,24 +33,251 @@ class Solution {
 }
 
 
-//Better Approach
+//Improved Approach
 
 class Solution {
-    private final int MOD = 1000000007;
+    private static final int MOD = 1_000_000_007;
 
     public int sumSubarrayMins(int[] arr) {
-        int sum = 0;
+        // Stores the total sum of minimum values across all subarrays
+        int totalMinSum = 0;
 
+        // Generate all subarrays
         for (int start = 0; start < arr.length; start++) {
-            int previousMin = Integer.MAX_VALUE;
+
+            // Tracks the minimum for the current subarray starting at 'start'
+            int currentMin = Integer.MAX_VALUE;
+
+            // Extend the subarray to the right
             for (int end = start; end < arr.length; end++) {
-                int currentMin = Math.min(previousMin, arr[end]);
-                sum = (sum + currentMin) % MOD;
-                previousMin = currentMin;
+                // Update minimum incrementally instead of recomputing
+                currentMin = Math.min(currentMin, arr[end]);
+
+                // Add contribution of current subarray
+                totalMinSum = (totalMinSum + currentMin) % MOD;
             }
         }
 
-        return sum;
+        return totalMinSum;
+    }
+}
+
+
+//Good Approach
+
+class Solution {
+    private static final int MOD = 1_000_000_007;
+
+    /*
+     * Intuition:
+     * ----------
+     * Finding the sum of minimums of all subarrays can be viewed differently.
+     *
+     * Instead of generating every possible subarray using (start, end),
+     * we can think in terms of window sizes.
+     *
+     * Every subarray has a fixed size `k`, where k ranges from 1 to arr.length.
+     *
+     * So, the problem becomes:
+     * - For each window size k :
+     *   Find the minimum of every window of size k
+     *   Sum all those minimums
+     * - Add it to the overall total sum
+     *
+     * This is equivalent to considering all subarrays, but grouped by their size.
+     *
+     * Overall:
+     * totalMinSum = sum of (minimum of all subarrays of size k) for all k
+     */
+    public int sumSubarrayMins(int[] arr) {
+        int totalMinSum = 0;
+
+        for (int windowSize = 1; windowSize <= arr.length; windowSize++) {
+            totalMinSum = (totalMinSum + slidingWindowMinimumSum(arr, windowSize)) % MOD;
+        }
+
+        return totalMinSum;
+    }
+
+    private int slidingWindowMinimumSum(int[] arr, int k) {
+        /*
+         * Min Heap stores index of the element
+         *
+         * The heap is ordered by the VALUE at those indices in ascending order,
+         * This ensures:
+         * - The index at the top of the heap always corresponds
+         *   to the minimum value in the current heap.
+         *
+         * Important:
+         * - Indices are stored to identify and discard elements
+         *   that fall out of the current window, i.e., elements
+         *   that are part of previous windows.
+         */
+        Queue<Integer> minHeap = new PriorityQueue<>((idx1, idx2) -> {
+            return Integer.compare(arr[idx1], arr[idx2]);
+        });
+
+        int windowStart = 0;
+        int windowEnd = 0;
+        int windowMinSum = 0;
+
+        /*
+        * Build the first window of size k.
+        * Insert indices of all elements of the first window into the heap.
+        */
+        while (windowEnd < k) {
+            minHeap.offer(windowEnd++);
+        }
+
+        // The index at the top of the heap corresponds to min value
+        windowMinSum += arr[minHeap.peek()];
+
+        /*
+        * Slide the window:
+        * - Move windowStart forward
+        * - Add the new element's index entering the window to the heap
+        */
+        while (windowEnd < arr.length) {
+            windowStart++;
+            // Add the index of the new element entering the window
+            minHeap.offer(windowEnd);
+            // Get the minimum element for the current window
+            windowMinSum += findWindowMin(minHeap, arr, windowStart);
+            windowEnd++;
+        }
+
+        return windowMinSum;
+    }
+
+    private int findWindowMin(Queue<Integer> minHeap, int[] arr, int windowStart) {
+        /*
+         * The mix heap always keeps the index whose corresponding
+         * value in the array is minimum among all stored indices.
+         *
+         * However, the index at the top of the heap may not
+         * necessarily belong to the current window.
+         * It could belong to a previous window.
+         *
+         * Therefore, before using the heap's top index,
+         * we remove all indices that are less than windowStart,
+         * because they fall outside the current window.
+         *
+         * Once all outdated indices are removed,
+         * the index at the top of the heap is guaranteed
+         * to correspond to the minimum element within the current window.
+         *
+         * ---------------------------------------------------------------
+         * Key Takeaways:
+         *
+         * - The heap may store indices from older windows.
+         * - This approach uses lazy removal for indices in the heap,
+         *   indices are only removed when they impact the minimum value of the current window. 
+         * - This guarantees correctness while avoiding unnecessary removals.
+         */
+        while (minHeap.peek() < windowStart) {
+            minHeap.poll();
+        }
+        // The top index corresponds to the minimum in the current window
+        return arr[minHeap.peek()];
+    }
+}
+
+
+//Better Approach
+
+class Solution {
+    private static final int MOD = 1_000_000_007;
+
+    public int sumSubarrayMins(int[] arr) {
+        int totalMinSum = 0;
+
+        for (int windowSize = 1; windowSize <= arr.length; windowSize++) {
+            totalMinSum = (totalMinSum + slidingWindowMinimumSum(arr, windowSize)) % MOD;
+        }
+
+        return totalMinSum;
+    }
+
+    /*
+    * Intuition:
+    *
+    * The deque always contains only those elements that can still become
+    * the minimum in some future window.
+    *
+    * We keep elements that are larger but to the RIGHT of the current minimum
+    * because they are potential candidates for the minimum when the current
+    * minimum (at the front of the deque) slides out of the window.
+    *
+    * Why can we safely remove larger elements to the LEFT?
+    *
+    * If an element A is larger than a newer element B and A appears to the
+    * left of B, then A can never be the minimum of any future window that
+    * contains B.
+    *
+    * Reason:
+    * - B is already smaller than A, so B will always dominate A in any window
+    *   containing both.
+    * - B enters later and stays longer in future windows, while A will slide
+    *   out earlier.
+    * - Even if a newer element enters, it will either replace B (if smaller)
+    *   or B will remain the minimum.
+    *
+    * Therefore, for as long as the current minimum remains inside the window,
+    * any larger element to its left is useless. When the minimum slides out,
+    * the deque already contains the next best candidates from the right.
+    */
+    private int slidingWindowMinimumSum(int[] arr, int k) {
+        Deque<Integer> increasingQueue = new ArrayDeque<>();
+
+        int windowStart = 0;
+        int windowEnd = 0;
+        int windowMinSum = 0;
+
+        // Process the first window separately
+        while (windowEnd < k) {
+            while (!increasingQueue.isEmpty() && arr[increasingQueue.peekLast()] >= arr[windowEnd]) {
+                increasingQueue.pollLast();
+            }
+            increasingQueue.offerLast(windowEnd);
+            windowEnd++;
+        }
+
+        // The minimum for the first window
+        windowMinSum += arr[increasingQueue.peekFirst()];
+        // Process the second window and all subsequent windows
+        while (windowEnd < arr.length) {
+            windowStart++;
+            windowMinSum += findWindowMin(increasingQueue, arr, windowStart, windowEnd);
+            windowEnd++;
+        }
+
+        return windowMinSum;
+    }
+
+    private int findWindowMin(Deque<Integer> increasingQueue, int[] arr, int windowStart, int windowEnd) {
+        while (!increasingQueue.isEmpty() && arr[increasingQueue.peekLast()] >= arr[windowEnd]) {
+            increasingQueue.pollLast();
+        }
+
+        increasingQueue.offerLast(windowEnd);
+
+        /*
+        * Since the sliding window moves by 1 position at each step,
+        * the minimum element, which is always at the front of the deque
+        * (because the deque is maintained in increasing order), is the
+        * only element that can potentially fall out of the window.
+        * 
+        * As the left boundary of the window advances by 1 index, we need
+        * to check if the element at the front of the deque is outside the
+        * current window. If it is, we remove it to ensure the deque only
+        * contains indices within the current window.
+        * Ex: [5,3,4]
+        */
+        if (increasingQueue.peekFirst() < windowStart) {
+            increasingQueue.pollFirst();
+        }
+
+        return arr[increasingQueue.peekFirst()];
     }
 }
 
@@ -51,204 +285,168 @@ class Solution {
 //Optimal Approach
 
 /*
- * We are tasked with finding the sum of minimums across all subarrays of a given array.
- * For each element in the array, we need to determine how many subarrays exist where that element 
- * is the minimum. The formula to compute this is based on the count of elements greater than 
- * the current element to the left and right (without breaking the sequence). Let's define:
+ * Instead of iterating over every subarray
+ * and finding the minimum for each, then summing those minimums,
+ * we can look at the problem differently.
  *
- * - Count of elements greater than arr[i] on the left side of arr[i] (without skipping any elements) as x.
- * - Count of elements greater than arr[i] on the right side of arr[i] (without skipping any elements) as y.
+ * For each element, we ask:
+ * "In how many subarrays does this element act as the minimum?"
  *
- * The number of subarrays where arr[i] is the minimum can be computed as:
- *   (x + 1) * (y + 1)
+ * The formula to compute this is based on the count of elements
+ * greater than the current element to its left and right
+ * (without breaking the sequence). Let's define:
  *
- * Where:
- * - (x + 1) is simply the difference between the current index and the index of the next smaller element to the left of arr[i].
- * - (y + 1) is simply the difference between the current index and the index of the next smaller element to the right of arr[i].
+ * Count of elements greater than arr[i] on the right side:
+ *   = nextSmallerIndex(arr[i]) - i
+ *
+ * Count of elements greater than arr[i] on the left side:
+ *   = i - prevSmallerIndex(arr[i])
+ *
+ * The number of subarrays where arr[i] is the minimum is:
+ *   (nextSmallerIndex(arr[i]) - i) * (i - prevSmallerIndex(arr[i]))
  *
  * The total sum of minimums across all subarrays will be:
- *   sum += arr[i] * ((x + 1) * (y + 1)) for each element arr[i] in the array.
+ *   sum += arr[i] * ((nextSmallerIndex(arr[i]) - i) * (i - prevSmallerIndex(arr[i])))
+ *   for each element arr[i] in the array.
+ *
  *
  * Example:
- * Consider the array: [7, 2, 4, 6, 3] 
+ * Consider the array: [7, 2, 4, 6, 3]
  *   Initial sum = 0
  *
  * Total subarrays where 7 is the minimum:
  *   - Subarrays: [7]
- *   - Count: 1 (left greater count = 0 and right greater count = 0, i.e., (0+1)*(0+1) = 1)
+ *   - Count: 1
  *   - sum += (7 * 1)
  *
  * Total subarrays where 2 is the minimum:
- *   - Subarrays: [7, 2], [2], [2, 4, 6, 3], [2, 4, 6], [2, 4], [7, 2, 4, 6, 3], [7, 2, 4, 6], [7, 2, 4]
- *   - Count: 8 (left greater count = 1 and right greater count = 3, i.e., (1+1)*(3+1) = 8)
+ *   - Subarrays: [7, 2], [2], [2, 4, 6, 3], [2, 4, 6], [2, 4],
+ *                [7, 2, 4, 6, 3], [7, 2, 4, 6], [7, 2, 4]
+ *   - Count: 8
  *   - sum += (2 * 8)
  *
  * Total subarrays where 4 is the minimum:
  *   - Subarrays: [4], [4, 6]
- *   - Count: 2 (left greater count = 0 and right greater count = 1, i.e., (0+1)*(1+1) = 2)
+ *   - Count: 2
  *   - sum += (4 * 2)
  *
  * Total subarrays where 6 is the minimum:
  *   - Subarrays: [6]
- *   - Count: 1 (left greater count = 0 and right greater count = 0, i.e., (0+1)*(0+1) = 1)
+ *   - Count: 1
  *   - sum += (6 * 1)
  *
  * Total subarrays where 3 is the minimum:
  *   - Subarrays: [4, 6, 3], [6, 3], [3]
- *   - Count: 3 (left greater count = 2 and right greater count = 0, i.e., (2+1)*(0+1) = 3)
+ *   - Count: 3
  *   - sum += (3 * 3)
  *
  * Final Total Sum = 45
- */
-
-/*
- * Corner case :
+ *
+ *
+ * => Corner case:
  *
  * Consider the array: [71, 55, 82, 55]
- * 
+ *
  * Total subarrays where 71 is the minimum:
  *   - Subarrays: [71]
- *   - Count = 1 (left count = 0, right count = 0, i.e. (0+1)*(0+1) = 1)
+ *   - Count = 1
  *   - Contribution: 71 * 1 = 71
  *
- * Total subarrays where 55 is the minimum:
- *   - Subarrays: [71, 55], [55], [55, 82], [55, 82, 55], [71, 55, 82], [71, 55, 82, 55]
- *   - Count = 6 (left count = 1, right count = 3, i.e. (1+1)*(3+1) = 6)
+ * Total subarrays where 55 is the minimum (first occurrence):
+ *   - Subarrays: [71, 55], [55], [55, 82], [55, 82, 55],
+ *                [71, 55, 82], [71, 55, 82, 55]
+ *   - Count = 6
  *   - Contribution: 55 * 6 = 330
  *
  * Total subarrays where 82 is the minimum:
  *   - Subarrays: [82]
- *   - Count = 1 (left count = 0, right count = 0, i.e. (0+1)*(0+1) = 1)
+ *   - Count = 1
  *   - Contribution: 82 * 1 = 82
  *
  * Total subarrays where 55 is the minimum (second occurrence):
  *   - Subarrays: [71, 55, 82, 55], [55, 82, 55], [82, 55], [55]
- *   - Count = 4 (left count = 2, right count = 0, i.e. (2+1)*(0+1) = 3)
+ *   - Count = 4
  *   - Contribution: 55 * 4 = 220
  *
  * Issue with duplicate counting:
- * The subarrays [71, 55, 82, 55] and [55, 82, 55] are being counted twice, 
- * once for each occurrence of 55. To prevent this, we need to adjust the 
- * condition when calculating the next smaller element index on the left or right.
- * 
- * The condition in the `nextSmallerElementOnLeft()` or `nextSmallerElementOnRight()` methods 
- * should be adjusted to avoid counting duplicate subarrays. We can modify the condition from:
- *   while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) { 
- *       stack.pop();
- *   }
- * to:
- *   while (!stack.isEmpty() && arr[stack.peek()] > arr[i]) {
- *       stack.pop();
- *   }
- *  This issue is relevant when the array contains duplicate elements.
+ * The subarrays [71, 55, 82, 55] and [55, 82, 55] are counted twice,
+ * once for each occurrence of 55.
+ *
+ *
+ * Handling Duplicates (Important):
+ * -------------------------------
+ * When the array contains duplicate values, care must be taken while
+ * computing previous and next smaller elements.
+ *
+ * If we use the same condition on both sides:
+ *
+ * Case 1:
+ *   Prev: >=
+ *   Next: >=
+ *   → Equal elements expand on both sides
+ *   → Same subarray may be counted multiple times (overcounting)
+ *
+ * Case 2:
+ *   Prev: >
+ *   Next: >
+ *   → Equal elements are not properly assigned
+ *   → Some subarrays may not be counted (undercounting)
+ *
+ * Correct Approach:
+ *   Use one strict and one non-strict comparison:
+ *
+ *   - One side: strictly smaller (>)
+ *   - Other side: smaller or equal (>=)
+ *
+ * This ensures:
+ *   - Each subarray is counted exactly once
+ *   - Duplicate elements do not cause overlap in contribution
+ *
+ * This technique is essentially a tie-breaking strategy
+ * for handling equal elements correctly.
  */
-
-//Naive Implementation
-
 class Solution {
-    private final int MOD = 1000000007;
-    private Deque<Integer> stack;
+    private static final int MOD = 1000000007;
 
     public int sumSubarrayMins(int[] arr) {
-        long sum = 0;
-        // Find the next smaller element index on the left and right for each element
-        stack = new ArrayDeque();
-        int[] nseIndexLeft = findNextStrictlySmallerOnLeft(arr);
-        stack.clear();
-        int[] nseIndexRight = findNextSmallerOnRight(arr);
+        long totalMinSum = 0;
+
+        int[] nextSmallerIndices = findNextSmallerIndices(arr);
+        Deque<Integer> stack = new ArrayDeque<>();
 
         for (int i = 0; i < arr.length; i++) {
-            // Calculate the count of subarrays where arr[i] is the minimum
-            long subarrayCount = ((i - nseIndexLeft[i])) * ((long) (nseIndexRight[i] - i));
-            // Add the contribution of arr[i] to the total sum
-            sum = (sum + (arr[i] * subarrayCount) % MOD) % MOD;
-        }
-
-        return (int) sum;
-    }
-
-    private int[] findNextStrictlySmallerOnLeft(int[] arr) {
-        int[] nseIndexLeft = new int[arr.length];
-
-        for (int i = 0; i < arr.length; i++) {
-            while (!stack.isEmpty() && arr[stack.peek()] > arr[i]) {
-                stack.pop();
-            }
-
-            /*
-             * If the stack is empty, it means there is no smaller element to the left
-             * Set nseIndexLeft[i] to -1 in that case, else set it to the index of the top
-             * element of the stack
-             */
-            nseIndexLeft[i] = stack.isEmpty() ? -1 : stack.peek();
-            stack.push(i);
-        }
-
-        return nseIndexLeft;
-    }
-
-    private int[] findNextSmallerOnRight(int[] arr) {
-        int[] nseIndexRight = new int[arr.length];
-
-        for (int i = arr.length - 1; i >= 0; i--) {
-            while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
-                stack.pop();
-            }
-            /*
-             * If the stack is empty, it means there is no smaller element to the right
-             * Set nseIndexRight[i] to arr.length in that case, else set it to the index of
-             * the top element of the stack
-             */
-            nseIndexRight[i] = stack.isEmpty() ? arr.length : stack.peek();
-            stack.push(i);
-        }
-
-        return nseIndexRight;
-    }
-}
-
-
-//Optimal Implementation
-
-
-class Solution {
-    private final int MOD = 1000000007;
-    private Deque<Integer> stack;
-
-    public int sumSubarrayMins(int[] arr) {
-        long sum = 0;
-
-        stack = new ArrayDeque<>();
-        int[] nseIndexRight = findNextSmallerOnRight(arr);
-        stack.clear();
-
-        for (int i = 0; i < arr.length; i++) {
-            while (!stack.isEmpty() && arr[stack.peek()] > arr[i]) {
-                stack.pop();
-            }
-
-            int nseIndexLeft = stack.isEmpty() ? -1 : stack.peek();
-
-            long subarrayCount = ((i - nseIndexLeft)) * ((long) (nseIndexRight[i] - i));
-            sum = (sum + (arr[i] * subarrayCount) % MOD) % MOD;
-            stack.push(i);
-        }
-
-        return (int) sum;
-    }
-
-    private int[] findNextSmallerOnRight(int[] arr) {
-        int[] nseIndexRight = new int[arr.length];
-
-        for (int i = arr.length - 1; i >= 0; i--) {
             while (!stack.isEmpty() && arr[stack.peek()] >= arr[i]) {
                 stack.pop();
             }
 
-            nseIndexRight[i] = stack.isEmpty() ? arr.length : stack.peek();
+            int prevSmallerIndex = stack.isEmpty() ? -1 : stack.peek();
+
+            stack.push(i);
+
+            long subarrayCount = (i - prevSmallerIndex) * (long) (nextSmallerIndices[i] - i);
+            subarrayCount = subarrayCount % MOD;
+
+            totalMinSum = totalMinSum + (arr[i] * subarrayCount) % MOD;
+            totalMinSum = totalMinSum % MOD;
+        }
+
+        return (int) totalMinSum;
+    }
+
+    private int[] findNextSmallerIndices(int[] arr) {
+        Deque<Integer> stack = new ArrayDeque<>();
+
+        int[] nextSmallerIndices = new int[arr.length];
+
+        for (int i = arr.length - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && arr[stack.peek()] > arr[i]) {
+                stack.pop();
+            }
+
+            nextSmallerIndices[i] = stack.isEmpty() ? arr.length : stack.peek();
             stack.push(i);
         }
 
-        return nseIndexRight;
+        return nextSmallerIndices;
     }
 }
