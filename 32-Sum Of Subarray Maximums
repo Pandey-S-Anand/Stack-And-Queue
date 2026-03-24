@@ -1,22 +1,29 @@
 //Bruteforce Approach
 
 class Solution {
-    public int sumOfMax(List<Integer> arr) {
-        int sum = 0;
-        for (int start = 0; start < arr.size(); start++) {
-            for (int end = start; end < arr.size(); end++) {
-                sum += findMaxInSubarray(arr, start, end);
+    public int sumOfMax(int[] arr) {
+        // Stores the total sum of maximums of all subarrays
+        int totalMaxSum = 0;
+
+        // Generate all subarrays
+        for (int start = 0; start < arr.length; start++) {
+            for (int end = start; end < arr.length; end++) {
+                // Find maximum for current subarray [start, end]
+                int subarrayMax = findMaxInSubarray(arr, start, end);
+
+                // Add to total sum
+                totalMaxSum += subarrayMax;
             }
         }
 
-        return sum;
+        return totalMaxSum;
     }
 
-    private int findMaxInSubarray(List<Integer> arr, int start, int end) {
+    private int findMaxInSubarray(int[] arr, int start, int end) {
         int max = Integer.MIN_VALUE;
 
         for (int i = start; i <= end; i++) {
-            max = Math.max(arr.get(i), max);
+            max = Math.max(max, arr[i]);
         }
 
         return max;
@@ -24,116 +31,467 @@ class Solution {
 }
 
 
+//Improved Approach
+
+class Solution {
+    public int sumOfMax(int[] arr) {
+        // Stores the total sum of maximum values across all subarrays
+        int totalMaxSum = 0;
+
+        // Generate all subarrays
+        for (int start = 0; start < arr.length; start++) {
+
+            // Tracks the maximum for the current subarray starting at 'start'
+            int currentMax = Integer.MIN_VALUE;
+
+            // Extend the subarray to the right
+            for (int end = start; end < arr.length; end++) {
+                // Update maximum incrementally instead of recomputing
+                currentMax = Math.max(currentMax, arr[end]);
+
+                // Add contribution of current subarray
+                totalMaxSum += currentMax;
+            }
+        }
+
+        return totalMaxSum;
+    }
+}
+
+
+//Good Approach
+
+class Solution {
+    /*
+    * Intuition:
+    * ----------
+    * Finding the sum of maximum of all subarrays can be viewed differently.
+    *
+    * Instead of generating every possible subarray using (start, end),
+    * we can think in terms of window sizes.
+    *
+    * Every subarray has a fixed size `k`, where k ranges from 1 to arr.length.
+    *
+    * So, the problem becomes:
+    * - For each window size k :
+    *   Find the maximum of every window of size k
+    *   Sum all those maximum
+    * - Add it to the overall total sum
+    *
+    * This is equivalent to considering all subarrays, but grouped by their size.
+    *
+    * Overall:
+    * totalMaxSum = sum of (maximum of all subarrays of size k) for all k
+    */
+    public int sumOfMax(int[] arr) {
+        int totalMaxSum = 0;
+
+        for (int windowSize = 1; windowSize <= arr.length; windowSize++) {
+            totalMaxSum += slidingWindowMinimumSum(arr, windowSize);
+        }
+
+        return totalMaxSum;
+    }
+
+    private int slidingWindowMinimumSum(int[] arr, int k) {
+        /*
+         * Max Heap stores index of the element
+         *
+         * The heap is ordered by the VALUE at those indices in descending order,
+         * This ensures:
+         * - The index at the top of the heap always corresponds
+         *   to the maximum value in the current heap.
+         *
+         * Important:
+         * - Indices are stored to identify and discard elements
+         *   that fall out of the current window, i.e., elements
+         *   that are part of previous windows.
+         */
+        Queue<Integer> maxHeap = new PriorityQueue<>((idx1, idx2) -> {
+            return Integer.compare(arr[idx2], arr[idx1]);
+        });
+
+        int windowStart = 0;
+        int windowEnd = 0;
+        int windowMaxSum = 0;
+
+        /*
+        * Build the first window of size k.
+        * Insert indices of all elements of the first window into the heap.
+        */
+        while (windowEnd < k) {
+            maxHeap.offer(windowEnd++);
+        }
+
+        // The index at the top of the heap corresponds to max value
+        windowMaxSum += arr[maxHeap.peek()];
+
+        /*
+        * Slide the window:
+        * - Move windowStart forward
+        * - Add the new element's index entering the window to the heap
+        */
+        while (windowEnd < arr.length) {
+            windowStart++;
+            // Add the index of the new element entering the window
+            maxHeap.offer(windowEnd);
+            // Get the maximum element for the current window
+            windowMaxSum += findWindowMax(maxHeap, arr, windowStart);
+            windowEnd++;
+        }
+
+        return windowMaxSum;
+    }
+
+    private int findWindowMax(Queue<Integer> maxHeap, int[] arr, int windowStart) {
+        /*
+         * The max heap always keeps the index whose corresponding
+         * value in the array is maximum among all stored indices.
+         *
+         * However, the index at the top of the heap may not
+         * necessarily belong to the current window.
+         * It could belong to a previous window.
+         *
+         * Therefore, before using the heap's top index,
+         * we remove all indices that are less than windowStart,
+         * because they fall outside the current window.
+         *
+         * Once all outdated indices are removed,
+         * the index at the top of the heap is guaranteed
+         * to correspond to the maximum element within the current window.
+         *
+         * ---------------------------------------------------------------
+         * Key Takeaways:
+         *
+         * - The heap may store indices from older windows.
+         * - This approach uses lazy removal for indices in the heap,
+         *   indices are only removed when they impact the maximum value of the current window. 
+         * - This guarantees correctness while avoiding unnecessary removals.
+         */
+        while (maxHeap.peek() < windowStart) {
+            maxHeap.poll();
+        }
+        // The top index corresponds to the maximum in the current window
+        return arr[maxHeap.peek()];
+    }
+}
+
+
 //Better Approach
 
 class Solution {
-    public int sumOfMax(List<Integer> arr) {
-        int sum = 0;
-        for (int start = 0; start < arr.size(); start++) {
-            int prevMax = Integer.MIN_VALUE;
-            for (int end = start; end < arr.size(); end++) {
-                int currentMax = Math.max(prevMax, arr.get(end));
-                sum += currentMax;
-                prevMax = currentMax;
-            }
+    public int sumOfMax(int[] arr) {
+        int totalMaxSum = 0;
+
+        for (int windowSize = 1; windowSize <= arr.length; windowSize++) {
+            totalMaxSum += slidingWindowMaximumSum(arr, windowSize);
         }
 
-        return sum;
+        return totalMaxSum;
+    }
+
+    /*
+    * Intuition:
+    *
+    * The deque always contains only those elements that can still become
+    * the maximum in some future window.
+    *
+    * We keep elements that are smaller but to the RIGHT of the current maximum
+    * because they are potential candidates for the maximum when the current
+    * maximum (at the front of the deque) slides out of the window.
+    *
+    * Why can we safely remove smaller elements to the LEFT?
+    *
+    * If an element A is smaller than a newer element B and A appears to the
+    * left of B, then A can never be the maximum of any future window that
+    * contains B.
+    *
+    * Reason:
+    * - B is already larger than A, so B will always dominate A in any window
+    *   containing both.
+    * - B enters later and stays longer in future windows, while A will slide
+    *   out earlier.
+    * - Even if a newer element enters, it will either replace B (if larger)
+    *   or B will remain the maximum.
+    *
+    * Therefore, for as long as the current maximum remains inside the window,
+    * any smaller element to its left is useless. When the maximum slides out,
+    * the deque already contains the next best candidates from the right.
+    */
+    private int slidingWindowMaximumSum(int[] arr, int k) {
+        Deque<Integer> decreasingQueue = new ArrayDeque<>();
+
+        int windowStart = 0;
+        int windowEnd = 0;
+        int windowMaxSum = 0;
+
+        // Process the first window separately
+        while (windowEnd < k) {
+            while (!decreasingQueue.isEmpty() && arr[decreasingQueue.peekLast()] <= arr[windowEnd]) {
+                decreasingQueue.pollLast();
+            }
+            decreasingQueue.offerLast(windowEnd);
+            windowEnd++;
+        }
+
+        // The maximum for the first window
+        windowMaxSum += arr[decreasingQueue.peekFirst()];
+        // Process the second window and all subsequent windows
+        while (windowEnd < arr.length) {
+            windowStart++;
+            windowMaxSum += findWindowMax(decreasingQueue, arr, windowStart, windowEnd);
+            windowEnd++;
+        }
+
+        return windowMaxSum;
+    }
+
+    private int findWindowMax(Deque<Integer> decreasingQueue, int[] arr, int windowStart, int windowEnd) {
+        while (!decreasingQueue.isEmpty() && arr[decreasingQueue.peekLast()] <= arr[windowEnd]) {
+            decreasingQueue.pollLast();
+        }
+
+        decreasingQueue.offerLast(windowEnd);
+
+        /*
+        * Since the sliding window moves by 1 position at each step,
+        * the maximum element, which is always at the front of the deque
+        * (because the deque is maintained in decreasing order), is the
+        * only element that can potentially fall out of the window.
+        * 
+        * As the left boundary of the window advances by 1 index, we need
+        * to check if the element at the front of the deque is outside the
+        * current window. If it is, we remove it to ensure the deque only
+        * contains indices within the current window.
+        * Ex: [5,3,4]
+        */
+        if (decreasingQueue.peekFirst() < windowStart) {
+            decreasingQueue.pollFirst();
+        }
+
+        return arr[decreasingQueue.peekFirst()];
     }
 }
+
 
 //Optimal Approach
 
-//Naive Implementation
-
 class Solution {
-    private Deque<Integer> stack;
-    
-    public int sumOfMax(List<Integer> arr) {
-       stack=new ArrayDeque<>();
-       int[] ngeIndexLeft = findNextGreaterOnLeft(arr);
-       stack.clear();
-       int[] ngeIndexRight = findNextGreaterOnRight(arr);
-       
-       int sum=0;
-       for(int i=0;i<arr.size();i++){
-          int subarrayCount = (i - ngeIndexLeft[i]) * (ngeIndexRight[i] - i); 
-          sum=sum+(arr.get(i)*subarrayCount);
-       }
-       
-       return sum;
-    }
-    
-    private int[] findNextGreaterOnLeft(List<Integer> arr) {
-        int[] ngeIndexLeft = new int[arr.size()];
+    /*
+     * Instead of iterating over every subarray
+     * and finding the maximum for each, then summing those maximums,
+     * we can look at the problem differently.
+     *
+     * For each element, we ask:
+     * "In how many subarrays does this element act as the maximum?"
+     *
+     * The formula to compute this is based on the count of elements
+     * to its left and right where it remains the maximum.
+     *
+     * Count of elements on the right side:
+     *   = nextGreaterIndex(arr[i]) - i
+     *
+     * Count of elements on the left side:
+     *   = i - prevGreaterIndex(arr[i])
+     *
+     * The number of subarrays where arr[i] is the maximum is:
+     *   (nextGreaterIndex(arr[i]) - i) *
+     *   (i - prevGreaterIndex(arr[i]))
+     *
+     * The total sum of maximums across all subarrays will be:
+     *   sum += arr[i] *
+     *          (nextGreaterIndex(arr[i]) - i) *
+     *          (i - prevGreaterIndex(arr[i]))
+     *
+     *
+     * Example:
+     * --------
+     * Consider the array: [7, 2, 4, 6, 3]
+     *
+     * Total subarrays where 7 is the maximum:
+     *   Subarrays:
+     *     [7], [7,2], [7,2,4], [7,2,4,6], [7,2,4,6,3]
+     *   Count: 5
+     *   Contribution: 7 * 5
+     *
+     * Total subarrays where 2 is the maximum:
+     *   Subarrays: [2]
+     *   Count: 1
+     *   Contribution: 2 * 1
+     *
+     * Total subarrays where 4 is the maximum:
+     *   Subarrays: [4], [2,4]
+     *   Count: 2
+     *   Contribution: 4 * 2
+     *
+     * Total subarrays where 6 is the maximum:
+     *   Subarrays:
+     *     [6], [4,6], [2,4,6],
+     *     [6,3], [4,6,3], [2,4,6,3]
+     *   Count: 6
+     *   Contribution: 6 * 6
+     *
+     * Total subarrays where 3 is the maximum:
+     *   Subarrays: [3]
+     *   Count: 1
+     *   Contribution: 3 * 1
+     *
+     * Final Total Sum = 35 + 2 + 8 + 36 + 3 = 84
+     *
+     *
+     * Handling Duplicates (Important):
+     * --------------------------------
+     * When the array contains duplicate values, care must be taken while
+     * computing previous and next greater elements.
+     *
+     * If we use the same condition on both sides:
+     *
+     * Case 1:
+     *   Prev: <=
+     *   Next: <=
+     *   → Overcounting (same subarray counted multiple times)
+     *
+     * Case 2:
+     *   Prev: <
+     *   Next: <
+     *   → Undercounting (some subarrays missed)
+     *
+     * Correct Approach:
+     *   Use one strict and one non-strict comparison:
+     *
+     *     - One side: strictly greater (<)
+     *     - Other side: greater or equal (<=)
+     *
+     * This ensures:
+     *   - Each subarray is counted exactly once
+     *   - No overlap due to duplicates
+     *
+     *
+     * Example (Corner Case):
+     * ----------------------
+     * Consider the array: [3, 5, 2, 5]
+     *
+     * i = 0, arr[i] = 3
+     *   prevGreaterIndex = -1
+     *   nextGreaterIndex = 1
+     *   left  = 1
+     *   right = 1
+     *   count = 1
+     *   Subarrays: [3]
+     *   Contribution = 3
+     *
+     * i = 1, arr[i] = 5 (first occurrence)
+     *   prevGreaterIndex = -1
+     *   nextGreaterIndex = 4
+     *   left  = 2
+     *   right = 3
+     *   count = 6
+     *   Subarrays:
+     *     [5], [5,2], [5,2,5],
+     *     [3,5], [3,5,2], [3,5,2,5]
+     *   Contribution = 5 * 6 = 30
+     *
+     * i = 2, arr[i] = 2
+     *   prevGreaterIndex = 1
+     *   nextGreaterIndex = 3
+     *   left  = 1
+     *   right = 1
+     *   count = 1
+     *   Subarrays: [2]
+     *   Contribution = 2
+     *
+     * i = 3, arr[i] = 5 (second occurrence)
+     *   prevGreaterIndex = -1
+     *   nextGreaterIndex = 4
+     *   left  = 4
+     *   right = 1
+     *   count = 4
+     *   Subarrays:
+     *     [5], [2,5], [5,2,5], [3,5,2,5]
+     *
+     *
+     * Problem:
+     *   Subarrays like [5,2,5] and [3,5,2,5]
+     *   are counted twice.
+     *
+     * Solution:
+     *   Adjust comparison on ONE side only (left OR right).
+     *
+     *
+     * Case 1 (Adjust right side):
+     *   Stop at next equal element
+     *
+     *   prevGreaterIndex      = -1
+     *   nextGreaterOrEqualIdx = 3
+     *   left  = 2
+     *   right = 2
+     *   count = 4
+     *
+     *   Subarrays:
+     *     [5], [5,2],
+     *     [3,5], [3,5,2]
+     *
+     *   Contribution = 5 * 4 = 20
+     *
+     *
+     * OR
+     *
+     * Case 2 (Adjust left side):
+     *   Stop at previous equal element
+     *
+     *   prevGreaterOrEqualIdx = 1
+     *   nextGreaterIndex      = 4
+     *   left  = 2
+     *   right = 1
+     *   count = 2
+     *
+     *   Subarrays:
+     *     [5], [2,5]
+     *
+     *   Contribution = 5 * 2 = 10
+     *
+     *
+     * Note:
+     *   These are two alternative implementations (Case 1 OR Case 2).
+     *   Do NOT apply both together.
+     */
+    public int sumOfMax(int[] arr) {
+        long totalMaxSum = 0;
 
-        for (int i = 0; i < arr.size(); i++) {
-            while (!stack.isEmpty() && arr.get(stack.peek()) < arr.get(i)) {
+        int[] nextGreaterOrEqualIndices = findNextGreaterOrEqualIndices(arr);
+        Deque<Integer> stack = new ArrayDeque<>();
+
+        for (int i = 0; i < arr.length; i++) {
+            while (!stack.isEmpty() && arr[stack.peek()] <= arr[i]) {
                 stack.pop();
             }
 
-            ngeIndexLeft[i] = stack.isEmpty() ? -1 : stack.peek();
-            stack.push(i);
-        }
-        
-        return ngeIndexLeft;
-    }
-    
-    private int[] findNextGreaterOnRight(List<Integer> arr) {
-        int[] ngeIndexRight = new int[arr.size()];
+            int prevGreaterIndex = stack.isEmpty() ? -1 : stack.peek();
 
-        for (int i = arr.size() - 1; i >= 0; i--) {
-            while (!stack.isEmpty() && arr.get(stack.peek()) <= arr.get(i)) {
+            stack.push(i);
+
+            long subarrayCount = (i - prevGreaterIndex) * (long) (nextGreaterOrEqualIndices[i] - i);
+
+            totalMaxSum += (arr[i] * subarrayCount);
+        }
+
+        return (int) totalMaxSum;
+    }
+
+    private int[] findNextGreaterOrEqualIndices(int[] arr) {
+        Deque<Integer> stack = new ArrayDeque<>();
+
+        int[] nextGreaterOrEqualIndices = new int[arr.length];
+
+        for (int i = arr.length - 1; i >= 0; i--) {
+            while (!stack.isEmpty() && arr[stack.peek()] < arr[i]) {
                 stack.pop();
             }
 
-            ngeIndexRight[i] = stack.isEmpty() ? arr.size() : stack.peek();
-            stack.push(i);
-        }
-        
-        return ngeIndexRight;
-    }
-}
-
-
-//Optimal Implementation
-
-class Solution {
-    private Deque<Integer> stack;
-
-    public int sumOfMax(List<Integer> arr) {
-        stack = new ArrayDeque<>();
-        int[] ngeIndexRight = findNextGreaterOnRight(arr);
-        stack.clear();
-
-        int sum = 0;
-        for (int i = 0; i < arr.size(); i++) {
-            while (!stack.isEmpty() && arr.get(stack.peek()) < arr.get(i)) {
-                stack.pop();
-            }
-
-            int ngeIndexLeft = stack.isEmpty() ? -1 : stack.peek();
-
-            int subarrayCount = (i - ngeIndexLeft) * (ngeIndexRight[i] - i);
-            sum = sum + (arr.get(i) * subarrayCount);
+            nextGreaterOrEqualIndices[i] = stack.isEmpty() ? arr.length : stack.peek();
             stack.push(i);
         }
 
-        return sum;
-    }
-
-    private int[] findNextGreaterOnRight(List<Integer> arr) {
-        int[] ngeIndexRight = new int[arr.size()];
-
-        for (int i = arr.size() - 1; i >= 0; i--) {
-            while (!stack.isEmpty() && arr.get(stack.peek()) <= arr.get(i)) {
-                stack.pop();
-            }
-
-            ngeIndexRight[i] = stack.isEmpty() ? arr.size() : stack.peek();
-            stack.push(i);
-        }
-
-        return ngeIndexRight;
+        return nextGreaterOrEqualIndices;
     }
 }
