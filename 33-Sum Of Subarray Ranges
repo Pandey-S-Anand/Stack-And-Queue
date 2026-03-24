@@ -2,28 +2,26 @@
 
 class Solution {
     public long subArrayRanges(int[] arr) {
-        int sum = 0;
+        long totalRangeSum = 0;
+
+        //Generate all possible subarrays using two loops (start, end).
         for (int start = 0; start < arr.length; start++) {
             for (int end = start; end < arr.length; end++) {
-                sum += maxMinDiffInSubarray(arr, start, end);
+                // Compute range (max - min) for current subarray, add this difference (range) to the total sum.
+                totalRangeSum += getRangeOfSubarray(arr, start, end);
             }
         }
 
-        return sum;
+        return totalRangeSum;
     }
 
-    private int maxMinDiffInSubarray(int[] arr, int start, int end) {
-        int max = Integer.MIN_VALUE;
-        int min = Integer.MAX_VALUE;
+    private int getRangeOfSubarray(int[] arr, int start, int end) {
+        int max = arr[start];
+        int min = arr[start];
 
         for (int i = start; i <= end; i++) {
-            if (arr[i] > max) {
-                max = arr[i];
-            }
-
-            if (arr[i] < min) {
-                min = arr[i];
-            }
+            max = Math.max(max, arr[i]);
+            min = Math.min(min, arr[i]);
         }
 
         return max - min;
@@ -34,22 +32,24 @@ class Solution {
 //Improved Approach
 
 class Solution {
+    /*
+    * Instead of recomputing max and min for every subarray,
+    * we extend the subarray and update max/min incrementally.
+    */
     public long subArrayRanges(int[] arr) {
-        int sum = 0;
+        long totalRangeSum = 0;
 
         for (int start = 0; start < arr.length; start++) {
-            int prevMax = Integer.MIN_VALUE;
-            int prevMin = Integer.MAX_VALUE;
+            int max = arr[start];
+            int min = arr[start];
             for (int end = start; end < arr.length; end++) {
-                int currMax = Math.max(prevMax, arr[end]);
-                int currMin = Math.min(prevMin, arr[end]);
-                sum = sum + (currMax - currMin);
-                prevMax = currMax;
-                prevMin = currMin;
+                max = Math.max(max, arr[end]);
+                min = Math.min(min, arr[end]);
+                totalRangeSum += (max - min);
             }
         }
 
-        return sum;
+        return totalRangeSum;
     }
 }
 
@@ -146,9 +146,7 @@ class Solution {
  *   (i - prevGreaterIndex(arr[i]))
  *
  * The total sum of maximums across all subarrays will be:
- *   sum += arr[i] *
- *          (nextGreaterIndex(arr[i]) - i) *
- *          (i - prevGreaterIndex(arr[i]))
+ *   sum += arr[i] * (nextGreaterIndex(arr[i]) - i) *  (i - prevGreaterIndex(arr[i]))
  *
  *
  * Handling Duplicates (Important):
