@@ -438,8 +438,10 @@ class Solution {
         long totalMinSum = 0;
         long totalMaxSum = 0;
 
-        int[] nextGreaterOrEqualIndices = findNextGreaterOrEqualIndices(arr);
-        int[] nextSmallerOrEqualIndices = findNextSmallerOrEqualIndices(arr);
+        int[] nextGreaterOrEqualIndices = new int[arr.length];
+        int[] nextSmallerOrEqualIndices = new int[arr.length];
+
+        computeNextIndices(arr, nextSmallerOrEqualIndices, nextGreaterOrEqualIndices);
 
         Deque<Integer> stack1 = new ArrayDeque<>();
         Deque<Integer> stack2 = new ArrayDeque<>();
@@ -471,37 +473,24 @@ class Solution {
         return totalMaxSum - totalMinSum;
     }
 
-    private int[] findNextGreaterOrEqualIndices(int[] arr) {
-        Deque<Integer> stack = new ArrayDeque<>();
-
-        int[] nextGreaterOrEqualIndices = new int[arr.length];
-
-        for (int i = arr.length - 1; i >= 0; i--) {
-            while (!stack.isEmpty() && arr[stack.peek()] < arr[i]) {
-                stack.pop();
-            }
-
-            nextGreaterOrEqualIndices[i] = stack.isEmpty() ? arr.length : stack.peek();
-            stack.push(i);
-        }
-
-        return nextGreaterOrEqualIndices;
-    }
-
-    private int[] findNextSmallerOrEqualIndices(int[] arr) {
-        Deque<Integer> stack = new ArrayDeque<>();
-
-        int[] nextSmallerOrEqualIndices = new int[arr.length];
+    private void computeNextIndices(int[] arr, int[] nextSmallerOrEqualIndices, int[] nextGreaterOrEqualIndices) {
+        Deque<Integer> smallerStack = new ArrayDeque<>();
+        Deque<Integer> greaterStack = new ArrayDeque<>();
 
         for (int i = arr.length - 1; i >= 0; i--) {
-            while (!stack.isEmpty() && arr[stack.peek()] > arr[i]) {
-                stack.pop();
+            while (!smallerStack.isEmpty() && arr[smallerStack.peek()] > arr[i]) {
+                smallerStack.pop();
             }
 
-            nextSmallerOrEqualIndices[i] = stack.isEmpty() ? arr.length : stack.peek();
-            stack.push(i);
-        }
+            while (!greaterStack.isEmpty() && arr[greaterStack.peek()] < arr[i]) {
+                greaterStack.pop();
+            }
 
-        return nextSmallerOrEqualIndices;
+            nextSmallerOrEqualIndices[i] = smallerStack.isEmpty() ? arr.length : smallerStack.peek();
+            nextGreaterOrEqualIndices[i] = greaterStack.isEmpty() ? arr.length : greaterStack.peek();
+
+            smallerStack.push(i);
+            greaterStack.push(i);
+        }
     }
 }
