@@ -1,67 +1,137 @@
 //Bruteforce Approach
 
+/*
+ * For each incoming price, we look backwards and count
+ * how many consecutive previous prices are less than or equal
+ * to the current price.
+ *
+ * We start from the most recent price and move left
+ * until we find a price greater than the current price.
+ * This breaks the span.
+ */
 class StockSpanner {
-    // List to store the prices for each day
-    private List<Integer> prices;
+    // Stores all previous prices in order
+    private List<Integer> priceHistory;
 
     public StockSpanner() {
-        // Initialize the list
-        prices = new ArrayList<>();
+        priceHistory = new ArrayList<>();
     }
-    
+
     public int next(int price) {
-        // Add the current price to the list
-        prices.add(price);
-        
-        // Calculate the span for the current price
-        int span = 1;  // The span starts with 1 (the current day)
-        
-        // Traverse backward through the list to count the number of consecutive days the price is less than or equal to the current price
-        for (int i = prices.size() - 2; i >= 0; i--) {
-            if (prices.get(i) <= price) {
-                span++;
-            } else {
-                break;  // Stop if we encounter a price greater than the current price
+        //current day is included
+        int span = 1;
+
+        // Traverse previous prices from right to left
+        for (int i = priceHistory.size() - 1; i >= 0; i--) {
+            // If we find a greater price, span stops here
+            if (priceHistory.get(i) > price) {
+                break;
             }
+
+            // Otherwise, extend the span
+            span++;
         }
-        
-        // Return the calculated span
+
+        // Add current price to history for future queries
+        priceHistory.add(price);
+
         return span;
     }
 }
 
 
-//Optimal Approach (Monotonic increasing stack)
+//Optimal Approach (Monotonic decreasing stack (bottom to top))
 
+/*
+ * Dry Run (Monotonic Stack Approach):
+ * -----------------------------------
+ * Prices = [100, 80, 60, 70, 60, 75, 85]
+ *
+ * Stack stores (price, span)
+ *
+ * Day 1: 100
+ *   span = 1
+ *   push (100,1) → means only 1 element (itself) ≤ 100
+ *   stack: [(100,1)]
+ *
+ * Day 2: 80
+ *   100 > 80 → stop
+ *   span = 1
+ *   push (80,1) → means only 1 element ≤ 80
+ *   stack: [(100,1), (80,1)]
+ *
+ * Day 3: 60
+ *   80 > 60 → stop
+ *   span = 1
+ *   push (60,1) → means only 1 element ≤ 60
+ *   stack: [(100,1), (80,1), (60,1)]
+ *
+ * Day 4: 70
+ *   60 ≤ 70 → pop → span = 2
+ *   80 > 70 → stop
+ *   push (70,2) → means there are 2 consecutive elements ≤ 70
+ *   stack: [(100,1), (80,1), (70,2)]
+ *
+ * Day 5: 60
+ *   70 > 60 → stop
+ *   span = 1
+ *   push (60,1) → means only 1 element ≤ 60
+ *   stack: [(100,1), (80,1), (70,2), (60,1)]
+ *
+ * Day 6: 75
+ *   60 ≤ 75 → pop → span = 2
+ *   70 ≤ 75 → pop → span = 2 + 2 = 4
+ *   80 > 75 → stop
+ *   push (75,4) → means there are 4 consecutive elements ≤ 75
+ *   stack: [(100,1), (80,1), (75,4)]
+ *
+ * Day 7: 85
+ *   75 ≤ 85 → pop → span = 5
+ *   80 ≤ 85 → pop → span = 5 + 1 = 6
+ *   100 > 85 → stop
+ *   push (85,6) → means there are 6 consecutive elements ≤ 85
+ *   stack: [(100,1), (85,6)]
+ *
+ *
+ * Core Idea:
+ * ----------
+ * If a previous day's price is ≤ current price,
+ * and we already know its span,
+ * we can directly add that span instead of iterating back.
+ *
+ * Stack Property:
+ * ---------------
+ * - Monotonic decreasing (bottom → top)
+ *
+ * Key Insight:
+ * ------------
+ * Each (price, span) represents how many consecutive elements
+ * (including itself) are ≤ that price.
+ */
 class StockSpanner {
-    /*
-     * Stack to store pairs of [price, span], where:
-     * price is the stock price
-     * span is the span (number of consecutive days) the stock price has been
-     * greater than or equal to the current price
-     */
+    // Stack stores {price, span}
     private Deque<int[]> stack;
 
     public StockSpanner() {
-        // Initialize the stack
         stack = new ArrayDeque<>();
     }
 
     public int next(int price) {
-        int span = 1;  // Initialize span as 1 (the current day itself)
-        /*
-         * Pop elements from the stack while the price at the top of the stack is less than or equal to the current price
-         * The span will include the current day plus the span of the days where prices are less than or equal to the current price
-         */
+        // At least current day contributes 1
+        int span = 1;
+
+        // Merge spans of all previous prices ≤ current price
         while (!stack.isEmpty() && stack.peek()[0] <= price) {
-            span += stack.peek()[1]; // Add the span of the previous days to the current span
-            stack.pop(); // Remove the previous element from the stack
+            // Add span of previous smaller/equal price
+            span += stack.peek()[1];
+
+            // Remove it since it is now merged
+            stack.pop();
         }
-        
-        // Push the current price and its calculated span onto the stack
+
+        // Push current price with its computed span
         stack.push(new int[] { price, span });
-        
-        // Return the span of the current stock price
+
         return span;
     }
 }
