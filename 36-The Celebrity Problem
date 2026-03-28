@@ -92,7 +92,7 @@ class Solution {
 
 
 
-//Optimal Approach
+//Better Approach
 
 /*
  * CRUX OF THE PROBLEM:
@@ -256,5 +256,71 @@ class Solution {
 
         // The potential celebrity passed both checks, return their index
         return potentialCelebrity;
+    }
+}
+
+
+//Optimal approach
+
+class Solution {
+    /*
+    * Elimination Approach (Optimized):
+    * ---------------------------------
+    * At any point, we maintain only ONE potential celebrity candidate.
+    *
+    * Instead of using a stack, we can use a single variable because:
+    * we are effectively performing pairwise elimination between two persons.
+    *
+    * For any two persons A and B:
+    *
+    * - If A knows B → A cannot be a celebrity → B becomes the candidate
+    * - If A does NOT know B → B cannot be a celebrity → A remains the candidate
+    *
+    * If both know each other OR neither knows the other:
+    * → both get disqualified, so we reset the candidate
+    *
+    * This way, we keep eliminating non-celebrities step by step,
+    * and at the end, we are left with at most one potential candidate.
+    *
+    * Finally, we validate that candidate by checking:
+    * - Row condition → candidate knows no one
+    * - Column condition → everyone knows the candidate
+    */
+    public int celebrity(int[][] matrix) {
+        int person = -1; // -1 means no potential celebrity has been identified yet
+
+        for (int otherPerson = 0; otherPerson < matrix.length; otherPerson++) {
+            if (person != -1) {
+                int personKnowsOtherPerson = matrix[person][otherPerson]; // Does person know otherPerson?
+                int otherPersonKnowsPerson = matrix[otherPerson][person]; // Does otherPerson know person?
+
+                if (personKnowsOtherPerson == otherPersonKnowsPerson) { // personKnowsOtherPerson = otherPersonKnowsPerson == 0 or personKnowsOtherPerson = otherPersonKnowsPerson == 1
+                    // If both know each other or neither knows the other , neither can be a celebrity
+                    person = -1;
+                } else if (personKnowsOtherPerson == 1) { // personKnowsOtherPerson == 1 and otherPersonKnowsPerson==0
+                    person = otherPerson; // person knows otherPerson, so person can't be a celebrity and other person can be a celeberity
+                } else { // personKnowsOtherPerson == 0 and otherPersonKnowsPerson==1
+                    // otherPerson knows person, so otherPerson can't be a celebrity. Continue, as 'person' is still a candidate 
+                }
+            } else {
+                // If no current candidate exists, assign the current person as the potential celebrity
+                person = otherPerson;
+            }
+        }
+
+        // If no potential celebrity exists, return -1
+        if (person == -1) {
+            return -1;
+        }
+
+        // Validate the potential celebrity:
+        for (int otherPerson = 0; otherPerson < matrix[0].length; otherPerson++) {
+            if (person != otherPerson && (matrix[person][otherPerson] == 1 || matrix[otherPerson][person] == 0)) {
+                return -1;
+            }
+        }
+
+        // The potential celebrity passed both checks, return their index
+        return person;
     }
 }
