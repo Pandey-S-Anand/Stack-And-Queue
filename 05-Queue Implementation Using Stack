@@ -1,5 +1,3 @@
-// Naive Approach
-
 class MyStack {
     // Maximum number of elements the stack can hold
     private int MAX_CAPACITY;
@@ -60,6 +58,9 @@ class MyStack {
         return top + 1;
     }
 }
+
+
+// Naive Approach
 
 class MyQueue {
     /**
@@ -162,123 +163,92 @@ class MyQueue {
 
 // Optimal Approach
 
-class MyStack {
-    private int MAX_CAPACITY;
-
-    private int top;
-
-    private int[] arr;
-
-    MyStack(int capacity) {
-        MAX_CAPACITY = capacity;
-        arr = new int[MAX_CAPACITY];
-        top = -1;
-    }
-
-    public void push(int data) {
-        if (isFull()) {
-            return;
-        }
-
-        arr[++top] = data;
-    }
-
-    public int pop() {
-        if (isEmpty()) {
-            return -1;
-        }
-
-        return arr[top--];
-    }
-
-    public int peek() {
-        if (isEmpty()) {
-            return -1;
-        }
-
-        return arr[top];
-    }
-
-    public boolean isFull() {
-        return top == arr.length - 1;
-    }
-
-    public boolean isEmpty() {
-        return top == -1;
-    }
-
-    public int getSize() {
-        return top + 1;
-    }
-}
-
+/**
+* Queue Implementation using Two Stacks (Optimized / Lazy Transfer Technique)
+*
+* Core Challenge:
+* A stack follows LIFO (Last In First Out), whereas a queue requires FIFO
+* (First In First Out). To simulate queue behavior using stacks, we maintain
+* two stacks with distinct roles:
+*
+* inStack  → used only for enqueue (push) operations
+* outStack → used only for dequeue (pop) and peek operations
+*
+* Intuition:
+* Elements are always pushed into inStack. This stack therefore keeps the
+* newest elements on top.
+*
+* When we need to remove or inspect the queue's front element, we must access
+* the *oldest* inserted element. This element will be at the bottom of inStack.
+*
+* To expose it efficiently, we reverse the order by transferring all elements
+* from inStack → outStack. After this transfer, the oldest element becomes the
+* top of outStack, which corresponds to the front of the queue.
+*
+* Example:
+*
+* push(1), push(2), push(3)
+*
+* inStack (top → bottom)
+* 3
+* 2
+* 1
+*
+* Transfer to outStack:
+*
+* outStack (top → bottom)
+* 1
+* 2
+* 3
+*
+* Now the queue front (1) is accessible via outStack.pop().
+*
+*
+* Why the Optimization Works (Lazy Transfer):
+* -------------------------------------------
+* The transfer from inStack → outStack is done only when outStack becomes empty
+* and we need to perform pop() or peek().
+*
+* This means each element moves at most once from inStack to outStack.
+*
+* Once elements are in outStack, multiple pop/peek operations can be performed
+* directly without additional transfers.
+*
+*
+* Why This is Useful:
+* -------------------
+* A naive implementation would transfer elements on every pop or peek,
+* resulting in O(n) time per operation.
+*
+* With this lazy transfer strategy:
+*
+* push → O(1)
+* pop  → amortized O(1)
+* peek → amortized O(1)
+*
+* The occasional O(n) transfer cost is spread across many operations,
+* so the average (amortized) cost per operation remains constant.
+*/
 class MyQueue {
+    private MyStack inStack;
+    private MyStack outStack;
+
+    public MyQueue() {
+        inStack = new MyStack(100);
+        outStack = new MyStack(100);
+    }
+
     /**
-    * Queue Implementation using Two Stacks (Optimized / Lazy Transfer Technique)
-    *
-    * Core Challenge:
-    * A stack follows LIFO (Last In First Out), whereas a queue requires FIFO
-    * (First In First Out). To simulate queue behavior using stacks, we maintain
-    * two stacks with distinct roles:
-    *
-    * inStack  → used only for enqueue (push) operations
-    * outStack → used only for dequeue (pop) and peek operations
-    *
-    * Intuition:
-    * Elements are always pushed into inStack. This stack therefore keeps the
-    * newest elements on top.
-    *
-    * When we need to remove or inspect the queue's front element, we must access
-    * the *oldest* inserted element. This element will be at the bottom of inStack.
-    *
-    * To expose it efficiently, we reverse the order by transferring all elements
-    * from inStack → outStack. After this transfer, the oldest element becomes the
-    * top of outStack, which corresponds to the front of the queue.
-    *
-    * Example:
-    *
-    * push(1), push(2), push(3)
-    *
-    * inStack (top → bottom)
-    * 3
-    * 2
-    * 1
-    *
-    * Transfer to outStack:
-    *
-    * outStack (top → bottom)
-    * 1
-    * 2
-    * 3
-    *
-    * Now the queue front (1) is accessible via outStack.pop().
-    *
-    *
-    * Why the Optimization Works (Lazy Transfer):
-    * -------------------------------------------
-    * The transfer from inStack → outStack is done only when outStack becomes empty
-    * and we need to perform pop() or peek().
-    *
-    * This means each element moves at most once from inStack to outStack.
-    *
-    * Once elements are in outStack, multiple pop/peek operations can be performed
-    * directly without additional transfers.
-    *
-    *
-    * Why This is Useful:
-    * -------------------
-    * A naive implementation would transfer elements on every pop or peek,
-    * resulting in O(n) time per operation.
-    *
-    * With this lazy transfer strategy:
-    *
-    * push → O(1)
-    * pop  → amortized O(1)
-    * peek → amortized O(1)
-    *
-    * The occasional O(n) transfer cost is spread across many operations,
-    * so the average (amortized) cost per operation remains constant.
-    */
+     * Enqueue operation
+     *
+     * Simply push the new element onto inStack.
+     *
+     * This represents inserting at the rear of the queue.
+     */
+    public void push(int x) {
+        inStack.push(x);
+    }
+
     public int pop() {
         // Transfer only when outStack is empty
         if (outStack.isEmpty()) {
